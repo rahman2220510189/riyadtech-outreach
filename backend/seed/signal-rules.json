@@ -1,0 +1,732 @@
+{
+  "$comment": "Signal rules (prompt §6). Patterns are JavaScript regular expressions, matched case-insensitively. 'pages' are page kinds (home, contact, careers, about, team, services, work, faq, booking, locations, legal) or 'any'. 'score' says which score the weight adds to; weights can be changed in Settings. 'lines' are sentences for {signal_line} (spintax {a|b}; variables {company}, {city}, {role}, {a_role}, {tech}). Every detected signal keeps the page and the matched text as evidence. 'job_opening' is hiring_dev for Segment B: no score, only for the 'Hiring developers' filter (job applications). job_remote, job_visa, job_english and job_local_lang describe a developer job advert (weight 0, for the job search only); patterns cover English, German, Dutch, French and Polish pages.",
+  "lists": {
+    "chatWidgets": [
+      {
+        "name": "Intercom",
+        "pattern": "widget\\.intercom\\.io|js\\.intercomcdn\\.com|intercomSettings"
+      },
+      {
+        "name": "Tidio",
+        "pattern": "code\\.tidio\\.co|tidiochat"
+      },
+      {
+        "name": "Drift",
+        "pattern": "js\\.driftt\\.com|drift\\.load\\("
+      },
+      {
+        "name": "LiveChat",
+        "pattern": "cdn\\.livechatinc\\.com|livechatinc\\.com/tracking"
+      },
+      {
+        "name": "Crisp",
+        "pattern": "client\\.crisp\\.chat|\\$crisp"
+      },
+      {
+        "name": "Zendesk chat",
+        "pattern": "static\\.zdassets\\.com|zopim|ze-snippet"
+      },
+      {
+        "name": "HubSpot chat",
+        "pattern": "js\\.usemessages\\.com|hubspot-messages"
+      },
+      {
+        "name": "tawk.to",
+        "pattern": "embed\\.tawk\\.to"
+      },
+      {
+        "name": "Facebook Messenger",
+        "pattern": "connect\\.facebook\\.net/[a-z_]+/sdk/xfbml\\.customerchat|fb-customerchat"
+      },
+      {
+        "name": "WhatsApp chat",
+        "pattern": "wa\\.me/\\d{6,}|api\\.whatsapp\\.com/send|whatsapp-widget|wa-chat"
+      },
+      {
+        "name": "Olark",
+        "pattern": "static\\.olark\\.com"
+      },
+      {
+        "name": "Freshchat",
+        "pattern": "wchat\\.freshchat\\.com|fw-chat"
+      },
+      {
+        "name": "Smartsupp",
+        "pattern": "smartsuppchat\\.com"
+      },
+      {
+        "name": "JivoChat",
+        "pattern": "code\\.jivosite\\.com|jivochat"
+      },
+      {
+        "name": "Chatbase",
+        "pattern": "chatbase\\.co/embed"
+      },
+      {
+        "name": "Podium",
+        "pattern": "connect\\.podium\\.com"
+      },
+      {
+        "name": "Birdeye",
+        "pattern": "birdeye\\.com/embed"
+      }
+    ],
+    "bookingTools": [
+      {
+        "name": "Calendly",
+        "pattern": "calendly\\.com/"
+      },
+      {
+        "name": "Acuity",
+        "pattern": "acuityscheduling\\.com"
+      },
+      {
+        "name": "Booksy",
+        "pattern": "booksy\\.com"
+      },
+      {
+        "name": "Cliniko",
+        "pattern": "cliniko\\.com"
+      },
+      {
+        "name": "Doctolib",
+        "pattern": "doctolib\\."
+      },
+      {
+        "name": "OpenTable",
+        "pattern": "opentable\\.(com|co\\.uk|ie|com\\.au)"
+      },
+      {
+        "name": "Dentally",
+        "pattern": "dentally\\.(co|com)"
+      },
+      {
+        "name": "Fresha",
+        "pattern": "fresha\\.com"
+      },
+      {
+        "name": "SimplyBook",
+        "pattern": "simplybook\\.(me|it)"
+      },
+      {
+        "name": "Setmore",
+        "pattern": "setmore\\.com"
+      },
+      {
+        "name": "Square Appointments",
+        "pattern": "squareup\\.com/appointments"
+      },
+      {
+        "name": "Jane",
+        "pattern": "\\.janeapp\\.com"
+      },
+      {
+        "name": "Zocdoc",
+        "pattern": "zocdoc\\.com"
+      },
+      {
+        "name": "ResDiary",
+        "pattern": "resdiary\\.com"
+      },
+      {
+        "name": "Vagaro",
+        "pattern": "vagaro\\.com"
+      },
+      {
+        "name": "HotDoc",
+        "pattern": "hotdoc\\.com\\.au"
+      },
+      {
+        "name": "Cloudbeds",
+        "pattern": "cloudbeds\\.com"
+      },
+      {
+        "name": "SiteMinder",
+        "pattern": "siteminder\\.com|thebookingbutton"
+      }
+    ],
+    "adsTags": [
+      {
+        "name": "Google Ads",
+        "pattern": "googleadservices\\.com|['\"]AW-\\d{6,}"
+      },
+      {
+        "name": "Meta Pixel",
+        "pattern": "connect\\.facebook\\.net/[a-z_]+/fbevents\\.js|fbq\\(['\"]init"
+      },
+      {
+        "name": "LinkedIn Insight",
+        "pattern": "snap\\.licdn\\.com/li\\.lms-analytics|_linkedin_partner_id"
+      },
+      {
+        "name": "Microsoft Ads",
+        "pattern": "bat\\.bing\\.com/bat\\.js"
+      },
+      {
+        "name": "TikTok Pixel",
+        "pattern": "analytics\\.tiktok\\.com/i18n/pixel"
+      }
+    ],
+    "crm": [
+      {
+        "name": "HubSpot",
+        "pattern": "js\\.hs-scripts\\.com|js\\.hsforms\\.net|js\\.hs-analytics\\.net"
+      },
+      {
+        "name": "Salesforce",
+        "pattern": "salesforce\\.com|force\\.com|pardot\\.com|webto(lead|case)"
+      },
+      {
+        "name": "Pipedrive",
+        "pattern": "pipedrive\\.com|pipedriveassets"
+      },
+      {
+        "name": "Zoho",
+        "pattern": "zoho\\.(com|eu)/crm|salesiq\\.zoho|zohopublic"
+      },
+      {
+        "name": "Shopify",
+        "pattern": "cdn\\.shopify\\.com|Shopify\\.theme"
+      },
+      {
+        "name": "WooCommerce",
+        "pattern": "woocommerce"
+      },
+      {
+        "name": "ActiveCampaign",
+        "pattern": "activehosted\\.com|trackcmp\\.net"
+      },
+      {
+        "name": "Keap",
+        "pattern": "infusionsoft\\.(com|app)|keap\\.(com|app)"
+      },
+      {
+        "name": "Monday",
+        "pattern": "forms\\.monday\\.com"
+      },
+      {
+        "name": "Jobber",
+        "pattern": "getjobber\\.com"
+      },
+      {
+        "name": "ServiceM8",
+        "pattern": "servicem8\\.com"
+      }
+    ],
+    "tech": [
+      {
+        "name": "WordPress",
+        "pattern": "wp-content/|wp-includes/|<meta[^>]+generator[^>]+wordpress"
+      },
+      {
+        "name": "Webflow",
+        "pattern": "<meta[^>]+generator[^>]+webflow|assets\\.website-files\\.com|data-wf-page"
+      },
+      {
+        "name": "Wix",
+        "pattern": "static\\.wixstatic\\.com|<meta[^>]+generator[^>]+wix"
+      },
+      {
+        "name": "Squarespace",
+        "pattern": "static1\\.squarespace\\.com|<meta[^>]+generator[^>]+squarespace"
+      },
+      {
+        "name": "Shopify",
+        "pattern": "cdn\\.shopify\\.com"
+      },
+      {
+        "name": "Drupal",
+        "pattern": "<meta[^>]+generator[^>]+drupal|/sites/default/files/"
+      },
+      {
+        "name": "Joomla",
+        "pattern": "<meta[^>]+generator[^>]+joomla"
+      },
+      {
+        "name": "HubSpot CMS",
+        "pattern": "<meta[^>]+generator[^>]+hubspot"
+      },
+      {
+        "name": "Framer",
+        "pattern": "<meta[^>]+generator[^>]+framer|framerusercontent\\.com"
+      },
+      {
+        "name": "Next.js",
+        "pattern": "/_next/static/|__NEXT_DATA__|x-powered-by:\\s*next\\.js",
+        "js": true
+      },
+      {
+        "name": "Nuxt",
+        "pattern": "/_nuxt/|__NUXT__",
+        "js": true
+      },
+      {
+        "name": "Gatsby",
+        "pattern": "<meta[^>]+generator[^>]+gatsby|___gatsby",
+        "js": true
+      },
+      {
+        "name": "React",
+        "pattern": "data-reactroot|react-dom(\\.production)?\\.min\\.js|__REACT_DEVTOOLS",
+        "js": true
+      },
+      {
+        "name": "Vue",
+        "pattern": "vue(\\.runtime)?(\\.global)?(\\.prod)?\\.js|data-v-[0-9a-f]{8}",
+        "js": true
+      },
+      {
+        "name": "Angular",
+        "pattern": "ng-version=",
+        "js": true
+      },
+      {
+        "name": "Node.js / Express",
+        "pattern": "x-powered-by:\\s*express",
+        "js": true
+      },
+      {
+        "name": "PHP",
+        "pattern": "x-powered-by:\\s*php"
+      },
+      {
+        "name": "ASP.NET",
+        "pattern": "x-powered-by:\\s*asp\\.net|__VIEWSTATE"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "key": "hiring_dev",
+      "label": "Hiring a developer",
+      "segment": "A",
+      "score": "need",
+      "weight": 40,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b((?:senior |junior |lead |mid[- ]level |principal )?(?:full[- ]?stack|front[- ]?end|back[- ]?end|react(?:\\.js)?|next\\.js|node(?:\\.js)?|javascript|typescript|python|django|php|laravel|wordpress|web|software|mobile|ios|android|devops|ai|ml|machine learning|llm|data) (?:developer|engineer))\\b",
+        "\\b((?:ai|ml|machine learning) engineer)\\b",
+        "\\b((?:senior |junior |lead )?(?:full[- ]?stack|front[- ]?end|back[- ]?end|web|software|app|mobile|php|java|python|react|javascript|typescript|node(?:\\.js)?|ki|ai)?[- ]?entwickler(?:in)?(?: \\((?:m/w/d|w/m/d|m/f/d)\\))?)",
+        "\\b(fachinformatiker(?:in)? (?:für |fuer )?anwendungsentwicklung)",
+        "\\b((?:senior |junior |medior )?(?:full[- ]?stack |front[- ]?end |back[- ]?end |web|software|php |java |python |react |\\.net )?ontwikkelaar)",
+        "\\b((?:d[ée]veloppeu(?:r|se)|ing[ée]nieure? (?:logiciel|d[ée]veloppement))(?:[- ](?:full[- ]?stack|front[- ]?end|back[- ]?end|web|logiciel|php|java|python|react|javascript|mobile|node(?:\\.js)?))?)",
+        "\\b((?:senior |junior |mid |starszy |m(ł|l)odszy )?programist(?:a|ka)(?: (?:java|python|php|javascript|react|\\.net|front[- ]?end|back[- ]?end|full[- ]?stack))?)"
+      ],
+      "extract": "role",
+      "lines": [
+        "{I noticed|I saw} {company} is hiring {a_role}.",
+        "{I noticed|I saw} {company} is looking for {a_role}{ at the moment|}."
+      ],
+      "requireNear": 600,
+      "skipBefore": [
+        "\\b(?:his|her|their|my)\\s+(?:[\\w-]+\\s+){0,3}career\\s+as\\s+an?\\s+$",
+        "\\b(?:worked|working|served|trained|qualified|began|started|spent [\\w\\s-]{1,20} years)\\s+(?:[\\w-]+\\s+){0,3}as\\s+an?\\s+$",
+        "\\b(?:former|formerly|previously|retired|ex-)\\s*(?:an?\\s+)?(?:senior\\s+|lead\\s+|junior\\s+)?$",
+        "\\b(?:arbeitete|war|zuvor|ehemalige[rn]?|fr(?:ü|ue)her)\\b[^.]{0,40}\\bals\\s+$",
+        "\\b(?:werkte|voorheen|eerder)\\b[^.]{0,40}\\bals\\s+$",
+        "\\b(?:a travaill[ée]|[ée]tait|ancien(?:ne)?|auparavant)\\b[^.]{0,40}\\b(?:comme|en tant que)\\s+$",
+        "\\b(?:pracowa(?:ł|l)a?|by(?:ł|l)a?|wcze(?:ś|s)niej)\\b[^.]{0,40}\\bjako\\s+$"
+      ]
+    },
+    {
+      "key": "stack_match",
+      "label": "The role matches our stack",
+      "segment": "A",
+      "score": "need",
+      "weight": 10,
+      "type": "derived"
+    },
+    {
+      "key": "no_ai_offer",
+      "label": "No AI offer on the site",
+      "segment": "A",
+      "score": "need",
+      "weight": 15,
+      "type": "absent",
+      "pages": [
+        "home",
+        "services",
+        "about"
+      ],
+      "source": "text",
+      "patterns": [
+        "\\b(ai|a\\.i\\.|artificial intelligence|chat ?bots?|machine learning|automation|automate|gpt|llms?|openai|conversational)\\b"
+      ],
+      "lines": [
+        "{Looking at|Reading} {company}'s services, I didn't see AI chatbots or automation on the list{ yet|}."
+      ]
+    },
+    {
+      "key": "design_led",
+      "label": "Design and marketing led",
+      "segment": "A",
+      "score": "need",
+      "weight": 20,
+      "type": "ratio",
+      "pages": [
+        "home",
+        "services",
+        "about"
+      ],
+      "patterns": [
+        "\\b(web design|website design|branding|brand identity|graphic design|marketing|seo|social media|ppc|paid ads|content|creative|copywriting|ux|ui design)\\b"
+      ],
+      "against": [
+        "\\b(software development|app development|application development|custom software|bespoke software|mobile apps?|api|apis|back[- ]?end|devops|full[- ]?stack|saas|integrations?)\\b"
+      ],
+      "min": 4,
+      "max": 1,
+      "lines": [
+        "{I like|I enjoyed} {company}'s design and marketing work{ in {city}|}.",
+        "{company}'s work looks strongly design and marketing led."
+      ]
+    },
+    {
+      "key": "small_team",
+      "label": "Small team (about 2 to 15 people)",
+      "segment": "A",
+      "score": "fit",
+      "weight": 10,
+      "type": "people",
+      "pages": [
+        "team",
+        "about"
+      ],
+      "min": 2,
+      "max": 15
+    },
+    {
+      "key": "case_studies",
+      "label": "Case studies or portfolio",
+      "segment": "A",
+      "score": "fit",
+      "weight": 10,
+      "type": "page",
+      "kinds": [
+        "work"
+      ],
+      "patterns": [
+        "\\bcase stud(y|ies)\\b"
+      ],
+      "lines": [
+        "{I had a look at|I looked through} {company}'s {case studies|recent work}."
+      ]
+    },
+    {
+      "key": "tech_stack",
+      "label": "Website technology",
+      "segment": "*",
+      "score": "fit",
+      "weight": 0,
+      "type": "list",
+      "list": "tech"
+    },
+    {
+      "key": "js_stack",
+      "label": "JavaScript / Node / React stack",
+      "segment": "A",
+      "score": "fit",
+      "weight": 10,
+      "type": "list",
+      "list": "tech",
+      "flag": "js",
+      "lines": [
+        "{I noticed|I saw} {company}'s site runs on {tech}, which is our daily stack."
+      ]
+    },
+    {
+      "key": "job_opening",
+      "label": "Hiring developers",
+      "segment": "B",
+      "score": "fit",
+      "weight": 0,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b((?:senior |junior |lead |mid[- ]level |principal )?(?:full[- ]?stack|front[- ]?end|back[- ]?end|react(?:\\.js)?|next\\.js|node(?:\\.js)?|javascript|typescript|python|django|php|laravel|wordpress|web|software|mobile|ios|android|devops|ai|ml|machine learning|llm|data) (?:developer|engineer))\\b",
+        "\\b((?:ai|ml|machine learning) engineer)\\b",
+        "\\b((?:senior |junior |lead )?(?:full[- ]?stack|front[- ]?end|back[- ]?end|web|software|app|mobile|php|java|python|react|javascript|typescript|node(?:\\.js)?|ki|ai)?[- ]?entwickler(?:in)?(?: \\((?:m/w/d|w/m/d|m/f/d)\\))?)",
+        "\\b(fachinformatiker(?:in)? (?:für |fuer )?anwendungsentwicklung)",
+        "\\b((?:senior |junior |medior )?(?:full[- ]?stack |front[- ]?end |back[- ]?end |web|software|php |java |python |react |\\.net )?ontwikkelaar)",
+        "\\b((?:d[ée]veloppeu(?:r|se)|ing[ée]nieure? (?:logiciel|d[ée]veloppement))(?:[- ](?:full[- ]?stack|front[- ]?end|back[- ]?end|web|logiciel|php|java|python|react|javascript|mobile|node(?:\\.js)?))?)",
+        "\\b((?:senior |junior |mid |starszy |m(ł|l)odszy )?programist(?:a|ka)(?: (?:java|python|php|javascript|react|\\.net|front[- ]?end|back[- ]?end|full[- ]?stack))?)"
+      ],
+      "extract": "role",
+      "lines": [],
+      "requireNear": 600,
+      "skipBefore": [
+        "\\b(?:his|her|their|my)\\s+(?:[\\w-]+\\s+){0,3}career\\s+as\\s+an?\\s+$",
+        "\\b(?:worked|working|served|trained|qualified|began|started|spent [\\w\\s-]{1,20} years)\\s+(?:[\\w-]+\\s+){0,3}as\\s+an?\\s+$",
+        "\\b(?:former|formerly|previously|retired|ex-)\\s*(?:an?\\s+)?(?:senior\\s+|lead\\s+|junior\\s+)?$",
+        "\\b(?:arbeitete|war|zuvor|ehemalige[rn]?|fr(?:ü|ue)her)\\b[^.]{0,40}\\bals\\s+$",
+        "\\b(?:werkte|voorheen|eerder)\\b[^.]{0,40}\\bals\\s+$",
+        "\\b(?:a travaill[ée]|[ée]tait|ancien(?:ne)?|auparavant)\\b[^.]{0,40}\\b(?:comme|en tant que)\\s+$",
+        "\\b(?:pracowa(?:ł|l)a?|by(?:ł|l)a?|wcze(?:ś|s)niej)\\b[^.]{0,40}\\bjako\\s+$"
+      ]
+    },
+    {
+      "key": "job_remote",
+      "label": "Remote or home office possible",
+      "segment": "*",
+      "score": "fit",
+      "weight": 0,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "source": "text",
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b(fully remote|100 ?% remote|remote[- ]first|remote work|work remotely|remote possible|remote option|home ?office|mobiles arbeiten|remote|thuiswerken|hybride|t(é|e)l(é|e)travail|praca zdalna|zdalnie|hybrydow[aoy])\\b"
+      ],
+      "lines": []
+    },
+    {
+      "key": "job_visa",
+      "label": "Visa or relocation support",
+      "segment": "*",
+      "score": "fit",
+      "weight": 0,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "source": "text",
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b(visa sponsorship|visa support|sponsor(ing)? (your )?visa|relocation (support|package|assistance|bonus)|we help (you )?relocate|blue card|blaue karte|umzugsunterst(ü|ue)tzung|relocation|kennismigrant|30 ?% (ruling|regeling)|relocatie|verhuisvergoeding|aide (à|a) la relocalisation|relocalisation|relokacj[aię]|pomoc w relokacji)\\b"
+      ],
+      "lines": []
+    },
+    {
+      "key": "job_english",
+      "label": "English-speaking team",
+      "segment": "*",
+      "score": "fit",
+      "weight": 0,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "source": "text",
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b(english[- ]speaking (team|company|environment|office)|(working|company|team|office) language (is )?english|unternehmenssprache (ist )?englisch|teamsprache (ist )?englisch|arbeitssprache (ist )?englisch|no german (is )?required|german (is )?not required|keine deutschkenntnisse|voertaal (is )?engels|engelstalig(e)? (team|omgeving)|dutch (is )?not required|langue de travail[^.]{0,15}anglais|(é|e)quipe anglophone|environnement anglophone|anglojęzyczn[ya] (zespół|zespol|środowisko)|język roboczy[^.]{0,10}angielski)\\b"
+      ],
+      "lines": []
+    },
+    {
+      "key": "job_local_lang",
+      "label": "Fluent local language required",
+      "segment": "*",
+      "score": "fit",
+      "weight": 0,
+      "type": "match",
+      "pages": [
+        "careers",
+        "home",
+        "about",
+        "team"
+      ],
+      "source": "text",
+      "requireOnPage": [
+        "\\b(we'?re hiring|we are hiring|join (our|the) team|vacanc(y|ies)|open (roles|positions)|current (openings|roles)|apply now|job description|wir suchen|wir stellen ein|stellenangebote?|offene stellen|jetzt bewerben|wij zoeken|we zoeken|vacatures?|solliciteer|kom werken bij|nous recrutons|on recrute|rejoignez[- ]nous|postuler|offres? d'emploi|rekrutujemy|do(ł|l)(ą|a)cz do nas|aplikuj|oferta pracy|szukamy|\\((m/w/d|w/m/d|m/f/d|m/v/x|m/v|h/f|f/h|k/m|m/k)\\))"
+      ],
+      "patterns": [
+        "\\b(flie(ß|ss)ende?n? deutsch|(flie(ß|ss)ende|sehr gute|gute|verhandlungssichere|exzellente|ausgezeichnete)n? deutschkenntnisse|deutschkenntnisse (auf |mindestens )?(b2|c1|c2)|german (b2|c1|c2)|verhandlungssichere?s? deutsch|deutsch (auf )?(c1|c2)|fluent (in )?german|german (language )?(skills )?(is |are )?(required|a must)|native german|deutsch als muttersprache|vloeiend nederlands|nederlands (is )?vereist|uitstekende beheersing van (de )?nederlandse taal|fluent (in )?dutch|dutch (is )?(required|a must)|fran(ç|c)ais courant|ma(î|i)trise (parfaite )?du fran(ç|c)ais|fran(ç|c)ais (exig(é|e)|obligatoire)|fluent (in )?french|bieg(ł|l)a znajomo(ś|s)(ć|c) (j(ę|e)zyka )?polskiego|j(ę|e)zyk polski (wymagany|obowi(ą|a)zkowy)|fluent (in )?polish)\\b"
+      ],
+      "lines": []
+    },
+    {
+      "key": "no_chat",
+      "label": "No chat on the site",
+      "segment": "B",
+      "score": "need",
+      "weight": 30,
+      "type": "list_absent",
+      "list": "chatWidgets",
+      "lines": [
+        "{I noticed|I saw} {company}'s website doesn't have a chat for questions{ after hours| outside opening hours|}.",
+        "{When I visited|Looking at} {company}'s website, I couldn't find a way to ask a quick question {without calling or emailing|outside office hours}."
+      ]
+    },
+    {
+      "key": "has_chat",
+      "label": "Has a chat widget",
+      "segment": "B",
+      "score": "need",
+      "weight": 10,
+      "type": "list",
+      "list": "chatWidgets",
+      "lines": [
+        "{I noticed|I saw} {company} already has a chat on the website ({tech})."
+      ]
+    },
+    {
+      "key": "booking",
+      "label": "Online booking or appointments",
+      "segment": "B",
+      "score": "need",
+      "weight": 15,
+      "type": "list",
+      "list": "bookingTools",
+      "patterns": [
+        "\\b(book (an |your )?(appointment|consultation)|book online|book now|make a booking|schedule (an|your) appointment|request an appointment)\\b"
+      ],
+      "lines": [
+        "{I noticed|I saw} people can book {online|appointments} on {company}'s website."
+      ]
+    },
+    {
+      "key": "faq",
+      "label": "FAQ page or many questions",
+      "segment": "B",
+      "score": "need",
+      "weight": 10,
+      "type": "page",
+      "kinds": [
+        "faq"
+      ],
+      "patterns": [
+        "\\b(frequently asked questions|faqs?)\\b"
+      ],
+      "lines": [
+        "{I noticed|I saw} {company}'s site answers a lot of common questions in its FAQ."
+      ]
+    },
+    {
+      "key": "ads_spend",
+      "label": "Runs ads (Google, Meta, LinkedIn)",
+      "segment": "*",
+      "score": "fit",
+      "weight": 15,
+      "type": "list",
+      "list": "adsTags"
+    },
+    {
+      "key": "multi_location",
+      "label": "Several locations",
+      "segment": "B",
+      "score": "fit",
+      "weight": 15,
+      "type": "match",
+      "pages": [
+        "home",
+        "about",
+        "locations",
+        "contact"
+      ],
+      "source": "text",
+      "patterns": [
+        "\\b(our (locations|clinics|practices|branches|offices|surgeries|hotels|schools|showrooms|dealerships)|find (a|your nearest) (clinic|branch|practice|location|office)|\\d+ (locations|clinics|practices|branches|offices))\\b"
+      ],
+      "orLocationCountAtLeast": 2,
+      "lines": [
+        "{I noticed|I saw} {company} has several locations."
+      ]
+    },
+    {
+      "key": "after_hours",
+      "label": "Opening hours on the site",
+      "segment": "B",
+      "score": "need",
+      "weight": 5,
+      "type": "match",
+      "pages": [
+        "home",
+        "contact",
+        "about",
+        "locations"
+      ],
+      "source": "text",
+      "patterns": [
+        "\\b(opening (hours|times)|office hours|hours of (operation|business)|business hours|we are open)\\b",
+        "\\bmon(day)?\\s*(-|–|to)\\s*(fri|sat|sun)(day)?\\b[^.]{0,20}\\d"
+      ],
+      "lines": [
+        "{company}'s website shows {opening hours|office hours}, so questions outside them wait until the next day."
+      ]
+    },
+    {
+      "key": "quote_requests",
+      "label": "Quote or estimate requests",
+      "segment": "B",
+      "score": "need",
+      "weight": 25,
+      "type": "match",
+      "pages": [
+        "any"
+      ],
+      "source": "text",
+      "patterns": [
+        "\\b(request a (quote|callback|valuation)|get a (free )?(quote|valuation|estimate)|free (quote|estimate|valuation)|book a (free )?valuation|instant (quote|valuation)|quote request)\\b"
+      ],
+      "lines": [
+        "{I noticed|I saw} {company}'s website asks visitors to request a quote{ or a callback|}.",
+        "{I noticed|I saw} quote requests come in through {company}'s website."
+      ]
+    },
+    {
+      "key": "manual_ops",
+      "label": "Manual paperwork or order questions",
+      "segment": "B",
+      "score": "need",
+      "weight": 20,
+      "type": "match",
+      "pages": [
+        "any"
+      ],
+      "source": "text",
+      "patterns": [
+        "\\b(track (your|an) order|order status|download (the|our|a) (form|application|registration)|(new )?patient (registration )?forms?|registration forms?|email (us )?your (documents|forms|details)|send us your (documents|forms)|upload your documents|print and (sign|complete))\\b"
+      ],
+      "lines": [
+        "{I noticed|I saw} {company}'s website asks people to send forms and documents {by email|by hand|manually}."
+      ]
+    },
+    {
+      "key": "crm_tools",
+      "label": "CRM or shop system",
+      "segment": "B",
+      "score": "need",
+      "weight": 15,
+      "type": "list",
+      "list": "crm",
+      "lines": [
+        "{I noticed|I saw} {company} uses {tech} on the website."
+      ]
+    }
+  ]
+}

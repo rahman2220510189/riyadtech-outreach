@@ -1,0 +1,16 @@
+{
+ "type": "Catalog",
+ "id": "Overture Releases",
+ "latest": "1999-12-31.0",
+ "links": [
+  {
+   "rel": "child",
+   "href": "{BASE}/stac/2026-08-19.0/catalog.json"
+  },
+  {
+   "rel": "child",
+   "href": "{BASE}/stac/1999-12-31.0/catalog.json",
+   "latest": true
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+ "type": "Collection",
+ "id": "division_area",
+ "links": [
+  {
+   "rel": "item",
+   "href": "{BASE}/stac/1999-12-31.0/divisions/division_area/00000/00000.json"
+  }
+ ]
+}

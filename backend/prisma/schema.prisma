@@ -1,0 +1,838 @@
+// Riyad Tech Outreach: database schema.
+// The connection URL lives in prisma.config.ts (Prisma 7), never in this file.
+// All timestamps are UTC (timestamptz).
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// The single admin (no multi-user access in v1).
+model AdminUser {
+  id             String    @id @default(uuid()) @db.Uuid
+  /// Always stored lower-case.
+  email          String    @unique
+  passwordHash   String    @map("password_hash")
+  /// Bumped on logout and password change; tokens carrying an older value stop working.
+  sessionVersion Int       @default(0) @map("session_version")
+  lastLoginAt    DateTime? @map("last_login_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("admin_users")
+}
+
+/// App settings as JSON by key (caps, warm-up, windows, weights, ...).
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("settings")
+}
+
+/// Who changed what: settings, campaign launches, suppression changes, exports.
+model AuditLog {
+  id       BigInt   @id @default(autoincrement())
+  at       DateTime @default(now()) @db.Timestamptz(3)
+  actor    String?
+  action   String
+  entity   String?
+  entityId String?  @map("entity_id")
+  details  Json?
+  ip       String?
+
+  @@index([at])
+  @@index([entity, entityId])
+  @@map("audit_log")
+}
+
+/// The worker writes here every 30 s; the UI warns when it is stale.
+model WorkerHeartbeat {
+  id         String   @id
+  pid        Int
+  version    String
+  startedAt  DateTime @map("started_at") @db.Timestamptz(3)
+  lastBeatAt DateTime @map("last_beat_at") @db.Timestamptz(3)
+  info       Json?
+
+  @@map("worker_heartbeat")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 1: areas, categories, lead finder
+// ---------------------------------------------------------------------------
+
+/// Markets and their outreach rules (seeded from seed/countries.json).
+model Country {
+  code              String   @id @db.Char(2)
+  name              String
+  enabled           Boolean  @default(false)
+  /// Strict cold-email rules (DE, AT): off by default; enabling needs an extra confirmation.
+  blocked           Boolean  @default(false)
+  /// Small countries may be imported whole; others need a region or a city.
+  allowWholeCountry Boolean  @default(false) @map("allow_whole_country")
+  /// Imports per state are possible (Overture has state outlines with ISO codes): US, AU.
+  regionImports     Boolean  @default(false) @map("region_imports")
+  /// Job search only: leads may be found and crawled (to apply for jobs), never e-mailed for sales.
+  jobSearch         Boolean  @default(false) @map("job_search")
+  timezones         String[]
+  /// Rough [west, south, east, north] box, used to find the country's outline quickly.
+  bbox              Float[]
+  outreachRules     Json     @map("outreach_rules")
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("countries")
+}
+
+/// GeoNames regions (admin1) and cities, for the area picker and time zones.
+model Location {
+  id         BigInt  @id @default(autoincrement())
+  geonameId  Int     @unique @map("geoname_id")
+  country    String  @db.Char(2)
+  /// "region" or "city"
+  kind       String
+  name       String
+  asciiName  String  @map("ascii_name")
+  admin1Code String? @map("admin1_code")
+  /// ISO 3166-2 style code, e.g. US-TX, AU-QLD, GB-ENG.
+  regionCode String? @map("region_code")
+  lat        Float?
+  lng        Float?
+  population Int     @default(0)
+  timezone   String?
+
+  @@index([country, kind, population(sort: Desc)])
+  @@map("locations")
+}
+
+/// Simplified area outlines from Overture divisions, cached per release.
+model AreaOutline {
+  key        String   @id
+  kind       String
+  release    String
+  /// GeoJSON Polygon or MultiPolygon (simplified).
+  geometry   Json
+  /// [west, south, east, north]
+  bbox       Float[]
+  pointCount Int      @map("point_count")
+  fetchedAt  DateTime @default(now()) @map("fetched_at") @db.Timestamptz(3)
+
+  @@map("area_outlines")
+}
+
+/// Overture taxonomy nodes -> our segments (seeded from seed/categories.json, read-only).
+model CategoryMap {
+  key          String   @id
+  segment      String   @db.Char(1)
+  label        String
+  /// Taxonomy node names; a place matches when its hierarchy contains one of them.
+  nodes        String[]
+  /// Descendant nodes that must NOT match (e.g. mobile phone repair under IT services).
+  excludeNodes String[] @map("exclude_nodes")
+  /// 1 (low) to 5 (high): how valuable this kind of business usually is (fit score, Phase 2).
+  value        Int      @db.SmallInt
+  sort         Int
+
+  @@map("categories_map")
+}
+
+/// Staging rows for one import task; merged into places in one SQL statement, then deleted.
+model StgOverturePlace {
+  id            BigInt   @id @default(autoincrement())
+  taskId        BigInt   @map("task_id")
+  overtureId    String   @map("overture_id")
+  segment       String   @db.Char(1)
+  categoryKey   String   @map("category_key")
+  name          String
+  website       String
+  websiteDomain String   @map("website_domain")
+  country       String   @db.Char(2)
+  regionCode    String?  @map("region_code")
+  city          String?
+  postcode      String?
+  address       String?
+  lat           Float
+  lng           Float
+  timezone      String?
+  phone         String?
+  emails        String[]
+  confidence    Float    @db.Real
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([taskId])
+  @@map("stg_overture_places")
+}
+
+/// One business with its own website. One row per website domain per segment.
+model Place {
+  id             BigInt    @id @default(autoincrement())
+  segment        String    @db.Char(1)
+  categoryKey    String    @map("category_key")
+  name           String
+  website        String
+  websiteDomain  String    @map("website_domain")
+  country        String    @db.Char(2)
+  regionCode     String?   @map("region_code")
+  city           String?
+  postcode       String?
+  address        String?
+  lat            Float
+  lng            Float
+  timezone       String?
+  phone          String?
+  /// E-mails Overture already lists for this place (checked by the crawler in Phase 2).
+  overtureEmails String[]  @map("overture_emails")
+  /// Every Overture place id seen for this domain (several = several locations).
+  sourceIds      String[]  @map("source_ids")
+  locationCount  Int       @default(1) @map("location_count")
+  confidence     Float     @db.Real
+  release        String
+  firstJobId     BigInt?   @map("first_job_id")
+  lastJobId      BigInt?   @map("last_job_id")
+  /// Phase 2: null = not crawled yet; ok | partial | robots_blocked | bot_blocked | unreachable | not_html | platform | error
+  crawlStatus    String?   @map("crawl_status")
+  crawledAt      DateTime? @map("crawled_at") @db.Timestamptz(3)
+  /// 0-100: can they pay (category value, ads spend, size, locations).
+  fitScore       Int?      @map("fit_score") @db.SmallInt
+  /// 0-100: do they need us (segment signals).
+  needScore      Int?      @map("need_score") @db.SmallInt
+  /// fit x need / 100, used for sorting.
+  leadScore      Int?      @map("lead_score") @db.SmallInt
+  /// Segment B only: chatbot | agent.
+  bestOffer      String?   @map("best_offer")
+  /// One sentence from the strongest signal (rules + spintax, fixed per lead).
+  signalLine     String?   @map("signal_line")
+  /// The address a campaign would use (null = none usable yet).
+  primaryEmail   String?   @map("primary_email")
+  firstName      String?   @map("first_name")
+  /// The primary e-mail or the website's domain is on the suppression list (kept in step by the app).
+  suppressed     Boolean   @default(false)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  emails         Email[]
+  signals        Signal[]
+
+  jobAds JobAd[]
+
+  @@unique([segment, websiteDomain])
+  @@index([country, regionCode])
+  @@index([categoryKey])
+  @@index([crawlStatus])
+  @@index([leadScore(sort: Desc)])
+  @@index([suppressed])
+  @@map("places")
+}
+
+/// One crawl of a website (one row per domain, replaced by the next crawl).
+model DomainCrawl {
+  domain     String   @id
+  /// Same values as places.crawl_status.
+  status     String
+  /// Where the home page ended up after redirects.
+  finalUrl   String?  @map("final_url")
+  httpStatus Int?     @map("http_status")
+  /// Every page tried: url, kind, status, bytes, ms, note.
+  pages      Json
+  /// Robots: allowed, crawlDelay, note.
+  robots     Json?
+  /// Technology names seen (generator, scripts, headers).
+  tech       String[]
+  /// The company's job platform (Personio, Greenhouse…): provider, board URL, job counts.
+  jobBoard   Json?    @map("job_board")
+  error      String?
+  startedAt  DateTime @map("started_at") @db.Timestamptz(3)
+  finishedAt DateTime @map("finished_at") @db.Timestamptz(3)
+  jobId      BigInt?  @map("job_id")
+
+  @@index([finishedAt])
+  @@map("domain_crawls")
+}
+
+/// A public business e-mail address found on a lead's website. One row per address.
+model Email {
+  id          BigInt   @id @default(autoincrement())
+  placeId     BigInt   @map("place_id")
+  place       Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  /// Lower-case, trimmed: the unique key.
+  email       String   @unique
+  domain      String
+  /// generic (info@, hello@) | named (a person) | role (privacy@, careers@: never used for outreach)
+  kind        String
+  /// own (website's domain) | free (gmail, outlook…) | other
+  domainMatch String   @map("domain_match")
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  firstName   String?  @map("first_name")
+  /// Text next to the address on the page (shown as proof).
+  context     String?
+  /// null = not checked or the DNS lookup failed; false = no MX (held back).
+  mxValid     Boolean? @map("mx_valid")
+  /// The page where the address was published (proof).
+  sourceUrl   String   @map("source_url")
+  /// crawl | overture (also listed by Overture) | csv (Phase 3)
+  origin      String   @default("crawl")
+  lawfulBasis String   @default("legitimate_interest_b2b") @map("lawful_basis")
+  foundAt     DateTime @default(now()) @map("found_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([placeId])
+  @@index([domain])
+  @@map("emails")
+}
+
+/// A signal detected on a lead's website, with the evidence.
+model Signal {
+  id          BigInt   @id @default(autoincrement())
+  placeId     BigInt   @map("place_id")
+  place       Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  key         String
+  /// need | fit
+  score       String
+  weight      Int      @db.SmallInt
+  /// Extracted value: the role ("React developer"), technology names, a count.
+  value       String?
+  evidenceUrl String?  @map("evidence_url")
+  snippet     String?
+  detectedAt  DateTime @default(now()) @map("detected_at") @db.Timestamptz(3)
+
+  @@unique([placeId, key])
+  @@index([key])
+  @@map("signals")
+}
+
+/// Cached MX lookups per e-mail domain.
+model MxCheck {
+  domain    String   @id
+  /// null = lookup failed (try again later)
+  hasMx     Boolean? @map("has_mx")
+  hosts     String[]
+  error     String?
+  checkedAt DateTime @default(now()) @map("checked_at") @db.Timestamptz(3)
+
+  @@map("mx_checks")
+}
+
+/// A background job (finder import, dry run, GeoNames import, later crawl and send).
+model Job {
+  id         BigInt     @id @default(autoincrement())
+  kind       String
+  /// queued | running | paused | done | failed | cancelled
+  status     String     @default("running")
+  dryRun     Boolean    @default(false) @map("dry_run")
+  params     Json
+  summary    Json?
+  error      String?
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  startedAt  DateTime?  @map("started_at") @db.Timestamptz(3)
+  finishedAt DateTime?  @map("finished_at") @db.Timestamptz(3)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  tasks      JobTask[]
+  events     JobEvent[]
+
+  @@index([kind, createdAt(sort: Desc)])
+  @@map("jobs")
+}
+
+/// Unit of work, claimed by the worker with FOR UPDATE SKIP LOCKED.
+model JobTask {
+  id          BigInt    @id @default(autoincrement())
+  jobId       BigInt    @map("job_id")
+  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  kind        String
+  /// queued | running | done | failed | cancelled
+  status      String    @default("queued")
+  payload     Json
+  result      Json?
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3) @map("max_attempts")
+  runAfter    DateTime  @default(now()) @map("run_after") @db.Timestamptz(3)
+  lockedAt    DateTime? @map("locked_at") @db.Timestamptz(3)
+  lockedBy    String?   @map("locked_by")
+  error       String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  finishedAt  DateTime? @map("finished_at") @db.Timestamptz(3)
+
+  @@index([status, runAfter])
+  @@index([jobId, status])
+  @@map("job_tasks")
+}
+
+model JobEvent {
+  id      BigInt   @id @default(autoincrement())
+  jobId   BigInt   @map("job_id")
+  job     Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  at      DateTime @default(now()) @db.Timestamptz(3)
+  /// info | warn | error
+  level   String
+  message String
+  data    Json?
+
+  @@index([jobId, id])
+  @@map("job_events")
+}
+
+/// Never contact: by e-mail address or by whole domain. Checked at import, at queueing and right before each send.
+model Suppression {
+  id        BigInt   @id @default(autoincrement())
+  /// email | domain
+  kind      String
+  /// Lower case: "info@acme.com" or "acme.com".
+  value     String
+  /// unsubscribed | bounced | replied_no | manual | client
+  reason    String
+  /// manual | import | unsubscribe | imap | lead
+  source    String   @default("manual")
+  note      String?
+  createdBy String?  @map("created_by")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([kind, value])
+  @@index([createdAt(sort: Desc)])
+  @@map("suppression")
+}
+
+/// A CSV file imported as leads (prompt §4.4).
+model LeadList {
+  id        BigInt     @id @default(autoincrement())
+  name      String
+  fileName  String?    @map("file_name")
+  /// Column mapping used: { email: "E-Mail", first_name: "Vorname", ..., custom: ["Industry"] }
+  mapping   Json
+  rowsTotal Int        @default(0) @map("rows_total")
+  /// ok / suppressed / duplicate / invalid counts at import
+  counts    Json
+  createdBy String?    @map("created_by")
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  leads     ListLead[]
+
+  @@map("lead_lists")
+}
+
+/// One row of an imported CSV.
+model ListLead {
+  id        BigInt   @id @default(autoincrement())
+  listId    BigInt   @map("list_id")
+  list      LeadList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  /// Row number in the file (1 = first data row).
+  rowNumber Int      @map("row_number")
+  email     String
+  domain    String
+  firstName String?  @map("first_name")
+  company   String?
+  website   String?
+  country   String?  @db.Char(2)
+  city      String?
+  /// Extra columns, usable as template variables ({industry}).
+  custom    Json
+  /// ok | suppressed | duplicate (already a lead or in another list) | invalid
+  status    String
+  note      String?
+  /// The found lead with the same website domain, if any.
+  placeId   BigInt?  @map("place_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([listId, email])
+  @@index([email])
+  @@index([domain])
+  @@map("list_leads")
+}
+
+/// A job advert from a public job API (Bundesagentur für Arbeit, Arbeitnow): Riyad's own job search.
+model JobAd {
+  id          BigInt    @id @default(autoincrement())
+  /// ba (Bundesagentur für Arbeit Jobsuche) | arbeitnow
+  source      String
+  /// The source's own id (BA refnr, Arbeitnow slug).
+  externalId  String    @map("external_id")
+  title       String
+  company     String
+  /// Company name without legal form, lower case ("acme" for "ACME GmbH & Co. KG"): matches found leads.
+  companyKey  String    @map("company_key")
+  location    String?
+  city        String?
+  postcode    String?
+  country     String?   @db.Char(2)
+  lat         Float?
+  lng         Float?
+  /// The advert on the source's website.
+  url         String
+  /// The employer's own page for the advert, when the source gives one.
+  externalUrl String?   @map("external_url")
+  /// Plain text, shortened (enough to read the gist; the full advert is at url).
+  description String?
+  tags        String[]  @default([])
+  jobTypes    String[]  @default([]) @map("job_types")
+  /// Developer role recognised in the title (null: not a developer job).
+  role        String?
+  isDev       Boolean   @default(false) @map("is_dev")
+  stackMatch  Boolean   @default(false) @map("stack_match")
+  /// remote | visa | english_team | ad_english | local_lang
+  flags       String[]  @default([])
+  postedAt    DateTime? @map("posted_at") @db.Timestamptz(3)
+  firstSeenAt DateTime  @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  /// The found lead of the same company (website domain or name), for its e-mail addresses.
+  placeId     BigInt?   @map("place_id")
+  place       Place?    @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  /// new | saved | hidden | applied
+  status      String    @default("new")
+  note        String?
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  applications Application[]
+
+  @@unique([source, externalId])
+  @@index([isDev, postedAt(sort: Desc)])
+  @@index([status])
+  @@index([companyKey])
+  @@index([placeId])
+  @@map("job_ads")
+}
+
+/// A sending mailbox (SMTP) with its inbox (IMAP). Passwords are encrypted (AES-256-GCM) and never returned.
+model Mailbox {
+  id              BigInt        @id @default(autoincrement())
+  /// Short label ("Gmail – hello@riyadtech.xyz").
+  label           String
+  fromName        String        @map("from_name")
+  fromEmail       String        @unique @map("from_email")
+  replyTo         String?       @map("reply_to")
+  smtpHost        String        @map("smtp_host")
+  smtpPort        Int           @map("smtp_port")
+  /// ssl (port 465) | starttls (587)
+  smtpSecurity    String        @map("smtp_security")
+  smtpUser        String        @map("smtp_user")
+  smtpPasswordEnc String?       @map("smtp_password_enc")
+  imapHost        String        @map("imap_host")
+  imapPort        Int           @map("imap_port")
+  imapUser        String        @map("imap_user")
+  /// null with imapSameAsSmtp = true: the SMTP password is used.
+  imapPasswordEnc String?       @map("imap_password_enc")
+  imapSameAsSmtp  Boolean       @default(true) @map("imap_same_as_smtp")
+  dailyCap        Int           @default(50) @map("daily_cap")
+  /// Warm-up counts from this day (Phase 5 uses it).
+  warmupStartedOn DateTime      @default(now()) @map("warmup_started_on") @db.Date
+  /// DKIM selector of the sending domain, if known (DNS check).
+  dkimSelector    String?       @map("dkim_selector")
+  active          Boolean       @default(true)
+  lastTestAt      DateTime?     @map("last_test_at") @db.Timestamptz(3)
+  lastTest        Json?         @map("last_test")
+  lastDnsAt       DateTime?     @map("last_dns_at") @db.Timestamptz(3)
+  lastDns         Json?         @map("last_dns")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  mails           MailLog[]
+  applications    Application[]
+
+  @@map("mailboxes")
+}
+
+/// An e-mail template: outreach (with the automatic footer) or a job application.
+model Template {
+  id           BigInt        @id @default(autoincrement())
+  /// outreach | job
+  kind         String
+  name         String
+  /// A | B | null (both)
+  segment      String?       @db.Char(1)
+  /// chatbot | agent | null
+  offer        String?
+  /// 1 = first e-mail, 2 = follow-up 1, 3 = follow-up 2
+  step         Int           @default(1)
+  subject      String
+  body         String
+  /// Written by the seed (still editable; the seed never overwrites an edited template).
+  seedKey      String?       @unique @map("seed_key")
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  applications Application[]
+
+  @@index([kind, segment])
+  @@map("templates")
+}
+
+/// Every e-mail sent outside campaigns: tests to myself and job applications.
+model MailLog {
+  id           BigInt   @id @default(autoincrement())
+  /// test | application | study
+  kind         String
+  mailboxId    BigInt?  @map("mailbox_id")
+  mailbox      Mailbox? @relation(fields: [mailboxId], references: [id], onDelete: SetNull)
+  toEmail      String   @map("to_email")
+  subject      String
+  messageId    String?  @map("message_id")
+  /// sent | failed
+  status       String
+  smtpResponse String?  @map("smtp_response")
+  error        String?
+  createdBy    String?  @map("created_by")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([kind, createdAt(sort: Desc)])
+  @@map("mail_log")
+}
+
+/// A CV (or other attachment) for job applications. Stored in the database (PDF, max 5 MB).
+model CvFile {
+  id        BigInt   @id @default(autoincrement())
+  label     String
+  fileName  String   @map("file_name")
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("cv_files")
+}
+
+/// A job application, written and sent one by one.
+model Application {
+  id           BigInt    @id @default(autoincrement())
+  jobAdId      BigInt?   @map("job_ad_id")
+  jobAd        JobAd?    @relation(fields: [jobAdId], references: [id], onDelete: SetNull)
+  placeId      BigInt?   @map("place_id")
+  company      String
+  role         String
+  toEmail      String?   @map("to_email")
+  mailboxId    BigInt?   @map("mailbox_id")
+  mailbox      Mailbox?  @relation(fields: [mailboxId], references: [id], onDelete: SetNull)
+  templateId   BigInt?   @map("template_id")
+  template     Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  subject      String
+  body         String
+  cvFileIds    BigInt[]  @default([]) @map("cv_file_ids")
+  /// draft | sent | failed | applied_elsewhere | interview | rejected | offer | no_answer
+  status       String    @default("draft")
+  sentAt       DateTime? @map("sent_at") @db.Timestamptz(3)
+  messageId    String?   @map("message_id")
+  smtpResponse String?   @map("smtp_response")
+  error        String?
+  note         String?
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, updatedAt(sort: Desc)])
+  @@index([jobAdId])
+  @@map("applications")
+}
+
+/// Riyad's own study-abroad profile (one row, id 1): filled once, used in every e-mail and checklist.
+model StudyProfile {
+  id             Int       @id @default(1)
+  fullName       String    @default("") @map("full_name")
+  nationality    String    @default("Bangladesh")
+  dateOfBirth    DateTime? @map("date_of_birth") @db.Date
+  phone          String?
+  /// master | bachelor | both
+  targetLevel    String    @default("master") @map("target_level")
+  targetFields   String[]  @default([]) @map("target_fields")
+  bscSubject     String?   @map("bsc_subject")
+  bscUniversity  String?   @map("bsc_university")
+  bscCgpa        Decimal?  @map("bsc_cgpa") @db.Decimal(4, 2)
+  bscCgpaScale   Decimal   @default(4) @map("bsc_cgpa_scale") @db.Decimal(4, 2)
+  bscYear        Int?      @map("bsc_year")
+  hscGpa         Decimal?  @map("hsc_gpa") @db.Decimal(4, 2)
+  hscYear        Int?      @map("hsc_year")
+  sscGpa         Decimal?  @map("ssc_gpa") @db.Decimal(4, 2)
+  sscYear        Int?      @map("ssc_year")
+  /// The BSc was taught in English (a medium-of-instruction letter can replace IELTS at many universities).
+  englishMedium  Boolean   @default(true) @map("english_medium")
+  ieltsScore     Decimal?  @map("ielts_score") @db.Decimal(3, 1)
+  duolingoScore  Int?      @map("duolingo_score")
+  /// none | applied | ready
+  passportStatus String    @default("none") @map("passport_status")
+  passportExpiry DateTime? @map("passport_expiry") @db.Date
+  workExperience String?   @map("work_experience")
+  /// Short facts about me the AI may use (projects, achievements). Nothing else is invented.
+  aboutMe        String?   @map("about_me")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("study_profile")
+}
+
+/// A document for applications (certificate, transcript, CV …). Stored in the database (max 8 MB).
+model StudyDocument {
+  id        BigInt   @id @default(autoincrement())
+  /// passport | photo | bsc_certificate | bsc_transcript | hsc_certificate | hsc_marksheet | ssc_certificate | ssc_marksheet | moi_letter | cv | motivation_letter | recommendation | ielts_result | other
+  kind      String
+  label     String
+  fileName  String   @map("file_name")
+  mime      String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([kind])
+  @@map("study_documents")
+}
+
+/// A scholarship or a study programme Riyad is considering.
+model StudyProgram {
+  id                 BigInt           @id @default(autoincrement())
+  name               String
+  /// scholarship | programme
+  kind               String           @default("scholarship")
+  country            String
+  university         String?
+  /// bachelor | master | both
+  level              String           @default("both")
+  field              String?
+  /// moi_ok | varies | test_required | not_required
+  englishRequirement String           @default("varies") @map("english_requirement")
+  minIelts           Decimal?         @map("min_ielts") @db.Decimal(3, 1)
+  funding            String?
+  costs              String?
+  /// Whether and how much a student may work there (hours per week, conditions).
+  workWhileStudying  String?         @map("work_while_studying")
+  applyUrl           String?          @map("apply_url")
+  infoUrl            String?          @map("info_url")
+  contactEmail       String?          @map("contact_email")
+  /// Document kinds needed besides the degree papers (those follow from the level).
+  requiredDocs       String[]         @default([]) @map("required_docs")
+  howToApply         String?          @map("how_to_apply")
+  notes              String?
+  /// interested | preparing | applied | interview | accepted | rejected | not_now
+  status             String           @default("interested")
+  /// Researched facts are checked against the official page before relying on them.
+  verified           Boolean          @default(false)
+  seedKey            String?          @unique @map("seed_key")
+  /// seed | manual | auto (found by the daily check on a university website)
+  origin             String           @default("manual")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deadlines          StudyDeadline[]
+  emails             StudyEmail[]
+  pages              StudyPage[]
+  findings           StudyFinding[]
+  directoryEntry     StudyUniversity?
+
+  @@index([status])
+  @@map("study_programs")
+}
+
+/// A date to remember: a deadline, an opening date or a reminder.
+model StudyDeadline {
+  id        BigInt       @id @default(autoincrement())
+  programId BigInt       @map("program_id")
+  program   StudyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  label     String
+  /// deadline | opens | reminder
+  kind      String       @default("deadline")
+  dueOn     DateTime     @map("due_on") @db.Date
+  /// false: expected from last year or a guide; check the official page.
+  confirmed Boolean      @default(false)
+  done      Boolean      @default(false)
+  note      String?
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([done, dueOn])
+  @@map("study_deadlines")
+}
+
+/// An e-mail to a university or scholarship office: drafted (by hand or by AI), checked, sent one by one.
+model StudyEmail {
+  id          BigInt        @id @default(autoincrement())
+  programId   BigInt?       @map("program_id")
+  program     StudyProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  /// inquiry | application | follow_up
+  purpose     String        @default("inquiry")
+  toEmail     String?       @map("to_email")
+  mailboxId   BigInt?       @map("mailbox_id")
+  subject     String
+  body        String
+  documentIds BigInt[]      @default([]) @map("document_ids")
+  /// Model that wrote the first draft (null: written by hand).
+  aiModel     String?       @map("ai_model")
+  /// draft | sent | failed
+  status      String        @default("draft")
+  sentAt      DateTime?     @map("sent_at") @db.Timestamptz(3)
+  messageId   String?       @map("message_id")
+  error       String?
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([status, updatedAt(sort: Desc)])
+  @@map("study_emails")
+}
+
+/// A university from the open directories (GitHub list, ROR, Wikidata), one row per website domain.
+model StudyUniversity {
+  id            BigInt        @id @default(autoincrement())
+  name          String
+  /// ISO 3166-1 alpha-2
+  countryCode   String        @map("country_code")
+  website       String
+  domain        String        @unique
+  /// hipo | ror | wikidata
+  sources       String[]      @default([])
+  rorId         String?       @map("ror_id")
+  wikidataId    String?       @map("wikidata_id")
+  /// new | found | nothing | unreadable | skipped
+  status        String        @default("new")
+  note          String?
+  lastCheckedAt DateTime?     @map("last_checked_at") @db.Timestamptz(3)
+  programId     BigInt?       @unique @map("program_id")
+  program       StudyProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  pages         StudyPage[]
+
+  @@index([status, countryCode])
+  @@map("study_universities")
+}
+
+/// A web page the daily check reads (an admission or programme page), with what was found on it last time.
+model StudyPage {
+  id            BigInt           @id @default(autoincrement())
+  url           String           @unique
+  universityId  BigInt?          @map("university_id")
+  university    StudyUniversity? @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  programId     BigInt?          @map("program_id")
+  program       StudyProgram?    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  /// ok | blocked | not_found | error | no_text | pasted
+  lastStatus    String?          @map("last_status")
+  lastError     String?          @map("last_error")
+  /// What was extracted last time (ielts, moi, deadlines, emails, englishTaught).
+  extracted     Json?
+  /// Signature of the extracted facts: a change makes new findings.
+  signature     String?
+  lastFetchedAt DateTime?        @map("last_fetched_at") @db.Timestamptz(3)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  findings      StudyFinding[]
+
+  @@index([programId])
+  @@index([universityId])
+  @@map("study_pages")
+}
+
+/// Something the check found on a page, waiting for me to accept or dismiss it.
+model StudyFinding {
+  id        BigInt       @id @default(autoincrement())
+  programId BigInt       @map("program_id")
+  program   StudyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  pageId    BigInt?      @map("page_id")
+  page      StudyPage?   @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  /// deadline | ielts | moi | email
+  type      String
+  /// The value: a date (YYYY-MM-DD), a score, an address, or the MOI sentence.
+  value     String
+  label     String?
+  /// The sentence on the page it came from.
+  snippet   String
+  url       String
+  /// new | accepted | dismissed
+  status    String       @default("new")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  decidedAt DateTime?    @map("decided_at") @db.Timestamptz(3)
+
+  @@unique([programId, type, value])
+  @@index([status])
+  @@map("study_findings")
+}

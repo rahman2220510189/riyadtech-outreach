@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import "@fontsource-variable/public-sans";
+
+/*
+ * Design tokens. Green means "open / healthy" and nothing else;
+ * actions use ink. Amber and red are for warnings and errors only.
+ */
+@theme {
+  --font-sans: "Public Sans Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #eef2f5;
+  --color-surface: #ffffff;
+  --color-ink: #15202e;
+  --color-ink-2: #4a5668;
+  --color-ink-3: #687384;
+  --color-line: #d6dde5;
+  --color-line-soft: #e6ebf0;
+  --color-go: #0b7a63;
+  --color-go-soft: #cfede5;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fbebcb;
+  --color-bad: #b42318;
+  --color-bad-soft: #fde3e0;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "tnum" 1;
+    text-rendering: optimizeLegibility;
+  }
+  /* Tailwind 4 leaves buttons with the arrow cursor; everything clickable shows the hand. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  summary,
+  select:not(:disabled),
+  label:has(> input[type="checkbox"]:not(:disabled)),
+  label:has(> input[type="radio"]:not(:disabled)),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled)::file-selector-button {
+    cursor: pointer;
+  }
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,8 @@
+GB.ENG	England	England	991000001
+GB.SCT	Scotland	Scotland	991000002
+IE.L	Leinster	Leinster	991000003
+US.TX	Texas	Texas	991000004
+US.OK	Oklahoma	Oklahoma	991000005
+AU.04	Queensland	Queensland	991000006
+AU.02	New South Wales	New South Wales	991000007
+DE.16	Berlin	Berlin	991000008

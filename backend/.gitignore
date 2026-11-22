@@ -1,0 +1,26 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+
+# Real lead files, imports and exports
+data/*
+!data/.gitkeep
+
+# Build output and dependencies
+node_modules/
+dist/
+coverage/
+.next/
+*.tsbuildinfo
+
+# Logs and OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Prisma client is generated (npm install runs `prisma generate`)
+src/generated/

@@ -1,0 +1,22 @@
+{
+  "$comment": "What Riyad Tech offers. Templates and signal rules read this. Editable in Settings (later phase). No WordPress work.",
+  "company": "Riyad Tech",
+  "website": "https://riyadtech.xyz",
+  "location": "Mirpur, Dhaka, Bangladesh",
+  "services": [
+    "Custom web applications",
+    "AI chatbots grounded in a client's own content",
+    "AI agents that use tools and connect to business systems",
+    "Document automation",
+    "White-label development for agencies"
+  ],
+  "stack": {
+    "languages": ["JavaScript", "TypeScript", "Python"],
+    "backend": ["Node.js", "Express", "Fastify", "NestJS", "FastAPI", "Django", "REST", "GraphQL"],
+    "frontend": ["React", "Next.js", "Tailwind"],
+    "data": ["MongoDB", "PostgreSQL", "MERN"],
+    "devops": ["Docker", "AWS"],
+    "ai": ["Hugging Face", "LLM", "open-source LLMs", "embeddings", "fine-tuning", "RAG", "AI agents"]
+  },
+  "notOffered": ["WordPress"]
+}

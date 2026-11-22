@@ -1,0 +1,18 @@
+{
+ "type": "Collection",
+ "id": "place",
+ "links": [
+  {
+   "rel": "item",
+   "href": "{BASE}/stac/1999-12-31.0/places/place/00000/00000.json"
+  },
+  {
+   "rel": "item",
+   "href": "{BASE}/stac/1999-12-31.0/places/place/00001/00001.json"
+  },
+  {
+   "rel": "item",
+   "href": "{BASE}/stac/1999-12-31.0/places/place/00002/00002.json"
+  }
+ ]
+}

@@ -1,0 +1,294 @@
+{
+  "$comment": "Overture places taxonomy (release 2026-09-23, schema v2.0.0) -> our segments. A place matches a category when its taxonomy hierarchy contains one of 'nodes' and none of 'exclude'. The first matching category (in this order) wins. Reviewed file; shown read-only in Settings. Tuned 2026-10-14 after the first real runs (Manchester, Ireland, Austin, Brisbane). value: 1 (low) to 5 (high), used by the fit score.",
+  "taxonomyRelease": "2026-09-23.0",
+  "categories": [
+    {
+      "key": "web_design",
+      "segment": "A",
+      "label": "Web design studio",
+      "nodes": [
+        "web_designer"
+      ],
+      "exclude": [],
+      "value": 5
+    },
+    {
+      "key": "marketing_agency",
+      "segment": "A",
+      "label": "Digital and marketing agency",
+      "nodes": [
+        "marketing_agency",
+        "b2b_marketing_consultant",
+        "media_agency",
+        "b2b_advertising_and_marketing_service"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "advertising_agency",
+      "segment": "A",
+      "label": "Advertising agency",
+      "nodes": [
+        "advertising_agency"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "seo_agency",
+      "segment": "A",
+      "label": "SEO and internet marketing",
+      "nodes": [
+        "internet_marketing_service"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "social_media_agency",
+      "segment": "A",
+      "label": "Social media agency",
+      "nodes": [
+        "social_media_agency"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "ecommerce_agency",
+      "segment": "A",
+      "label": "E-commerce agency",
+      "nodes": [
+        "e_commerce_service"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "graphic_design",
+      "segment": "A",
+      "label": "Graphic design and branding",
+      "nodes": [
+        "graphic_designer"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "software_development",
+      "segment": "A",
+      "label": "Software development",
+      "nodes": [
+        "software_development"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "it_services",
+      "segment": "A",
+      "label": "IT services and consulting",
+      "nodes": [
+        "it_consultant",
+        "information_technology_company"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "dentist",
+      "segment": "B",
+      "label": "Dentist",
+      "nodes": [
+        "dental_clinic",
+        "general_dentistry",
+        "cosmetic_dentistry",
+        "pediatric_dentistry",
+        "orthodontics"
+      ],
+      "exclude": [],
+      "value": 5
+    },
+    {
+      "key": "aesthetic_clinic",
+      "segment": "B",
+      "label": "Cosmetic and aesthetic clinic",
+      "nodes": [
+        "medical_skin_care",
+        "cosmetic_surgery",
+        "medical_spa"
+      ],
+      "exclude": [],
+      "value": 5
+    },
+    {
+      "key": "medical_clinic",
+      "segment": "B",
+      "label": "Medical and private clinic",
+      "nodes": [
+        "primary_care_or_general_clinic",
+        "specialized_health_care",
+        "vision_or_eye_care_clinic",
+        "doctors_office",
+        "walk_in_clinic",
+        "urgent_care_clinic",
+        "pediatric_clinic",
+        "fertility_clinic",
+        "dermatology",
+        "osteopathic_medicine",
+        "optometry"
+      ],
+      "exclude": [
+        "medical_skin_care"
+      ],
+      "value": 4
+    },
+    {
+      "key": "physiotherapy",
+      "segment": "B",
+      "label": "Physiotherapy and chiropractic",
+      "nodes": [
+        "physical_medicine_and_rehabilitation",
+        "chiropractic"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "veterinary",
+      "segment": "B",
+      "label": "Veterinary practice",
+      "nodes": [
+        "veterinary_care",
+        "veterinarian"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "law_firm",
+      "segment": "B",
+      "label": "Law firm",
+      "nodes": [
+        "attorney_or_law_firm",
+        "patent_law",
+        "tenant_and_eviction_law",
+        "legal_service"
+      ],
+      "exclude": [],
+      "value": 5
+    },
+    {
+      "key": "accountant",
+      "segment": "B",
+      "label": "Accountant and bookkeeper",
+      "nodes": [
+        "accountant",
+        "bookkeeper",
+        "tax_service",
+        "tax_office"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "real_estate_agency",
+      "segment": "B",
+      "label": "Real-estate agency",
+      "nodes": [
+        "real_estate_agent",
+        "commercial_real_estate",
+        "real_estate_service"
+      ],
+      "exclude": [
+        "property_management",
+        "real_estate_photography",
+        "real_estate_investment",
+        "real_estate_law"
+      ],
+      "value": 4
+    },
+    {
+      "key": "property_management",
+      "segment": "B",
+      "label": "Property management",
+      "nodes": [
+        "property_management"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "hotel",
+      "segment": "B",
+      "label": "Hotel and boutique hotel",
+      "nodes": [
+        "hotel",
+        "inn",
+        "bed_and_breakfast",
+        "resort",
+        "guest_house"
+      ],
+      "exclude": [
+        "motel"
+      ],
+      "value": 4
+    },
+    {
+      "key": "private_school",
+      "segment": "B",
+      "label": "Private school",
+      "nodes": [
+        "private_school",
+        "montessori_school"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "tutoring",
+      "segment": "B",
+      "label": "Tutoring and language school",
+      "nodes": [
+        "tutoring_service",
+        "language_school",
+        "private_tutor"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "insurance_broker",
+      "segment": "B",
+      "label": "Insurance broker",
+      "nodes": [
+        "insurance_agency"
+      ],
+      "exclude": [],
+      "value": 3
+    },
+    {
+      "key": "financial_adviser",
+      "segment": "B",
+      "label": "Financial adviser and mortgage broker",
+      "nodes": [
+        "financial_advising",
+        "mortgage_broker"
+      ],
+      "exclude": [],
+      "value": 4
+    },
+    {
+      "key": "car_dealer",
+      "segment": "B",
+      "label": "Car dealer",
+      "nodes": [
+        "auto_dealer",
+        "used_auto_dealer"
+      ],
+      "exclude": [],
+      "value": 4
+    }
+  ]
+}

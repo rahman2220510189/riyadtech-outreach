@@ -1,0 +1,24 @@
+{
+ "type": "Feature",
+ "id": "00000",
+ "bbox": [
+  -106.6,
+  -29.2,
+  153.6,
+  60.9
+ ],
+ "properties": {
+  "num_rows": 7
+ },
+ "assets": {
+  "aws": {
+   "href": "{BASE}/data/divisions/part-00000.zstd.parquet",
+   "file:size": 12902,
+   "alternate": {
+    "s3": {
+     "href": "s3://test/data/divisions/part-00000.zstd.parquet"
+    }
+   }
+  }
+ }
+}

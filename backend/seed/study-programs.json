@@ -1,0 +1,1772 @@
+{
+  "$comment": "Researched study options (Europe, Asia, Oceania, North America; 13 and 22 Nov 2026): scholarships with expected dates and self-funded guides. Inserted once when missing (by seedKey); empty fields of saved rows are filled from here, never overwritten. verified=false: check the official page.",
+  "programs": [
+    {
+      "seedKey": "hu-stipendium-hungaricum",
+      "name": "Stipendium Hungaricum",
+      "kind": "scholarship",
+      "country": "Hungary",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Tuition waived; monthly stipend about HUF 43,700 (~€110); free dormitory place or HUF 40,000/month towards rent; medical insurance.",
+      "costs": "Living costs above the stipend (budget for food and travel).",
+      "applyUrl": "https://apply.stipendiumhungaricum.hu",
+      "infoUrl": "https://stipendiumhungaricum.hu",
+      "contactEmail": null,
+      "requiredDocs": [
+        "passport",
+        "photo",
+        "motivation_letter"
+      ],
+      "howToApply": "Two steps, both needed: (1) apply on the Hungarian DreamApply portal (up to two programmes), (2) get nominated by the Bangladesh Ministry of Education (sending partner). English proof: each university decides; many accept an MOI letter or the Duolingo test, so ask the universities you choose.",
+      "notes": "Facts from a 2026 application guide, not the official page: check stipendiumhungaricum.hu before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Application portal opens (expected)",
+          "kind": "opens",
+          "dueOn": "2026-11-17",
+          "confirmed": false
+        },
+        {
+          "label": "Find the Bangladesh Ministry of Education nomination steps and their deadline",
+          "kind": "reminder",
+          "dueOn": "2026-12-01",
+          "confirmed": false
+        },
+        {
+          "label": "DreamApply application deadline, 14:00 CET (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-01-15",
+          "confirmed": false
+        }
+      ],
+      "workWhileStudying": "Up to 30 hours a week during term; in vacations at most 90 days / 66 working days (ELTE)."
+    },
+    {
+      "seedKey": "tr-turkiye-burslari",
+      "name": "Türkiye Burslari (Türkiye Scholarships)",
+      "kind": "scholarship",
+      "country": "Türkiye",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Tuition, monthly stipend, free dormitory, health insurance, one return flight, one-year Turkish language course.",
+      "costs": null,
+      "applyUrl": "https://turkiyeburslari.gov.tr",
+      "infoUrl": "https://turkiyeburslari.gov.tr",
+      "contactEmail": null,
+      "requiredDocs": [
+        "passport",
+        "photo",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "One online application on the official portal (TBBS). No English test needed for most programmes; a one-year Turkish course comes first. Minimum grades in guides: 70% for bachelor, 75% for master.",
+      "notes": "Not in the EU, a good second option. Dates from a 2027 guide: confirm on the official site.",
+      "deadlines": [
+        {
+          "label": "Applications open (expected)",
+          "kind": "opens",
+          "dueOn": "2027-01-10",
+          "confirmed": false
+        },
+        {
+          "label": "Application deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-02-20",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "eu-erasmus-mundus",
+      "name": "Erasmus Mundus Joint Masters",
+      "kind": "scholarship",
+      "country": "Europe (several countries)",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Full scholarship: €1,400 per month for up to 24 months, tuition and insurance covered.",
+      "costs": null,
+      "applyUrl": "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en",
+      "infoUrl": "https://www.eacea.ec.europa.eu/scholarships/erasmus-mundus-catalogue_en",
+      "contactEmail": null,
+      "requiredDocs": [
+        "passport",
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Pick programmes in the official catalogue and apply to each programme separately on its own website. Each programme sets its English rule: some accept an English-taught bachelor's degree, others want a test. Ask each programme before applying.",
+      "notes": "Very competitive; apply to several programmes that match your BSc subject.",
+      "deadlines": [
+        {
+          "label": "Choose programmes in the catalogue (most deadlines are October–January)",
+          "kind": "reminder",
+          "dueOn": "2026-12-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "it-dsu",
+      "name": "Italy: public universities + regional DSU scholarship",
+      "kind": "programme",
+      "country": "Italy",
+      "university": "e.g. University of Milan",
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Regional DSU scholarship by family income: fee waiver (full or 50%), money per year, free meals. Applied for after admission.",
+      "costs": "Living costs; the scholarship needs family income documents from Bangladesh.",
+      "applyUrl": null,
+      "infoUrl": "https://www.unimi.it/en/study/financial-support/regional-scholarships",
+      "contactEmail": null,
+      "requiredDocs": [
+        "passport",
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "1) Get admitted to an English-taught programme (each university has its own deadline and English rule; many accept an MOI letter). 2) Pre-enrolment for the visa. 3) Apply for the regional DSU scholarship (Milan 2026: 10 July – 30 September).",
+      "notes": "Admission deadlines for non-EU students are often early in the year; check each university.",
+      "deadlines": [
+        {
+          "label": "Check admission deadlines of the Italian universities you like",
+          "kind": "reminder",
+          "dueOn": "2027-01-10",
+          "confirmed": false
+        },
+        {
+          "label": "DSU scholarship application (Milan, if like 2026)",
+          "kind": "deadline",
+          "dueOn": "2027-09-30",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "at-public-universities",
+      "name": "Austria: public universities (English-taught)",
+      "kind": "programme",
+      "country": "Austria",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "No large scholarship for full degrees found; low tuition instead.",
+      "costs": "Tuition €726.72 per semester for non-EU students; living about €850–1,200 a month; proof of funds needed for the visa.",
+      "applyUrl": null,
+      "infoUrl": "https://www.study.eu/article/austria-tuition-fees-cost-of-living",
+      "contactEmail": null,
+      "requiredDocs": [
+        "passport",
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university. Many accept a letter from your university confirming English was the language of instruction instead of IELTS; check each programme.",
+      "notes": "Affordable, but without a scholarship you need money for living costs.",
+      "deadlines": [
+        {
+          "label": "Check winter-semester 2027 application deadlines of chosen universities",
+          "kind": "reminder",
+          "dueOn": "2027-01-15",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "it-invest-your-talent",
+      "name": "Invest Your Talent in Italy (IYT)",
+      "kind": "scholarship",
+      "country": "Italy",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "moi_ok",
+      "minIelts": null,
+      "funding": "€10,800 for one academic year (9 months), paid quarterly. 2026 call; Bangladesh was an eligible country (citizens living there).",
+      "costs": "Tuition depends on the Italian university; ask whether a fee waiver is possible.",
+      "applyUrl": "https://investyourtalent.esteri.it/SitoIYT/EN/current-call",
+      "infoUrl": "https://investyourtalent.esteri.it",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Choose a participating master's or postgraduate course, then apply online in the IYT window. English: B2 or higher; the 2026 call says a university certificate that your degree was taught in English may be accepted as proof.",
+      "notes": "Official 2026 call (Art. 3.4 on English): window was 20 April – 11 May 2026. The 2027 dates are expected to be similar. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "IYT call expected to open",
+          "kind": "opens",
+          "dueOn": "2027-04-20",
+          "confirmed": false
+        },
+        {
+          "label": "IYT application deadline, 18:00 Italian time (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-05-11",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "fr-eiffel",
+      "name": "Eiffel Excellence Scholarship",
+      "kind": "scholarship",
+      "country": "France",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Monthly allowance €1,200 for master's (from January 2026), plus travel, insurance and housing help. Tuition is not covered.",
+      "costs": "Tuition at public French universities for non-EU students; living costs above the allowance in Paris.",
+      "applyUrl": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "infoUrl": "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "You cannot apply alone: apply to a French master's programme first and ask that university to nominate you for Eiffel. Each university has its own earlier internal deadline. English: the French university decides (ask whether your MOI letter is accepted).",
+      "notes": "Institutions submit to Campus France by 6 January 2027 (third-party report of the 2027 call); results around the week of 12 April 2027. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Ask your French university for its internal Eiffel deadline",
+          "kind": "reminder",
+          "dueOn": "2026-11-30",
+          "confirmed": false
+        },
+        {
+          "label": "Universities send nominations to Campus France (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-01-06",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "se-si-global-professionals",
+      "name": "SI Scholarship for Global Professionals",
+      "kind": "scholarship",
+      "country": "Sweden",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Full tuition, SEK 12,000 per month, travel grant. Bangladesh is on the eligible list (third-party report of the 2027 call).",
+      "costs": "Without the scholarship, Swedish tuition for non-EU students is high.",
+      "applyUrl": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "infoUrl": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Two steps: apply to a master's on universityadmissions.se (round usually closes mid-January), then apply to SI with your application number. Needs leadership and work experience. English: Swedish admissions ask for English 6; check universityadmissions.se whether your Bangladeshi degree counts, otherwise an English test is needed.",
+      "notes": "SI deadline 24 February 2027 from a third-party report. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "universityadmissions.se master's round deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-01-15",
+          "confirmed": false
+        },
+        {
+          "label": "SI scholarship application deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-02-24",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "ie-goi-ies",
+      "name": "Government of Ireland International Education Scholarship (GOI-IES)",
+      "kind": "scholarship",
+      "country": "Ireland",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "€10,000 for one year plus a full fee waiver from the university. About 60 awards.",
+      "costs": "Living costs in Ireland are high (Dublin especially).",
+      "applyUrl": "https://hea.ie/funding-postgraduate-research/goi-ies/",
+      "infoUrl": "https://hea.ie/funding-postgraduate-research/goi-ies/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "First get an offer (conditional is fine) for a full-time master's at an Irish university, then apply to GOI-IES. The scholarship call sets no English test; the university's own admission rules decide.",
+      "notes": "2026 deadline was 12 March 2026, 17:00 Irish time (official call). 2027 expected similar. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Apply to Irish master's programmes to have an offer in time",
+          "kind": "reminder",
+          "dueOn": "2027-01-31",
+          "confirmed": false
+        },
+        {
+          "label": "GOI-IES application deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-03-11",
+          "confirmed": false
+        }
+      ],
+      "workWhileStudying": "Up to 20 hours a week during term and 40 hours a week in the main holidays."
+    },
+    {
+      "seedKey": "nl-nl-scholarship",
+      "name": "NL Scholarship (Holland Scholarship)",
+      "kind": "scholarship",
+      "country": "Netherlands",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "€5,000 in the first year; not full tuition. For non-EEA students at participating universities.",
+      "costs": "Dutch tuition for non-EU students is high; the €5,000 covers only part.",
+      "applyUrl": "https://studyinnl.org/finances/nl-scholarship",
+      "infoUrl": "https://studyinnl.org/finances/nl-scholarship",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to the programme and to the scholarship through the university; each sets its own deadline (often 1 February or 1 May). English: most Dutch universities ask for IELTS/TOEFL from Bangladeshi applicants; ask each one.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Check each Dutch university's NL Scholarship deadline (often 1 February)",
+          "kind": "reminder",
+          "dueOn": "2027-01-15",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "ro-mfa",
+      "name": "Romanian Government Scholarships (MFA)",
+      "kind": "scholarship",
+      "country": "Romania",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Romanian state scholarship for non-EU citizens incl. Bangladesh (tuition-free study; check the call for allowance).",
+      "costs": "Bachelor's and master's are taught in Romanian: a Romanian-language preparatory year comes first.",
+      "applyUrl": "https://scholarships.studyinromania.gov.ro",
+      "infoUrl": "https://studyinromania.gov.ro",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv"
+      ],
+      "howToApply": "Apply on the Study in Romania portal. Needs a good academic average. Programmes in Romanian (prep year first); some PhDs in English.",
+      "notes": "2025 window was 29 January – 12 March 2025 (UNB report). 2027 dates expected similar. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Romania MFA scholarship call expected to open",
+          "kind": "opens",
+          "dueOn": "2027-01-29",
+          "confirmed": false
+        },
+        {
+          "label": "Romania MFA application deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-03-12",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "cz-gov-developing",
+      "name": "Czech Government Scholarships – Developing Countries",
+      "kind": "scholarship",
+      "country": "Czech Republic",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Government scholarship for full-time master's/PhD; Bangladesh is on the 2027/28 eligible list (official MŠMT page).",
+      "costs": "Check the guidelines for the monthly stipend.",
+      "applyUrl": "https://msmt.gov.cz/en/scholarships/government-scholarships-developing-countries",
+      "infoUrl": "https://msmt.gov.cz/en/scholarships/government-scholarships-developing-countries",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "For Bangladesh only English-taught programmes. You take an online English entrance test as part of the application (no IELTS mentioned).",
+      "notes": "The 2027/28 round closed on 30 September 2026. Next round (for 2028/29) expected to open late August 2027. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Next Czech scholarship round expected to open",
+          "kind": "opens",
+          "dueOn": "2027-08-21",
+          "confirmed": false
+        },
+        {
+          "label": "Czech scholarship deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-09-30",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "uk-chevening",
+      "name": "Chevening Scholarship",
+      "kind": "scholarship",
+      "country": "United Kingdom",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Tuition (up to a limit), monthly living allowance, return flight, visa costs.",
+      "costs": "Needs at least 2,800 hours of work experience before applying.",
+      "applyUrl": "https://www.chevening.org",
+      "infoUrl": "https://www.chevening.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "recommendation"
+      ],
+      "howToApply": "Apply to Chevening and to three UK master's courses; you need one unconditional offer by the Chevening deadline. Chevening itself has no English requirement since 2020, but the UK university decides (many accept English-medium degrees from Bangladesh; ask).",
+      "notes": "The 2027/28 round closed on 6 October 2026. Next round (2028/29) expected to open early August 2027. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Next Chevening round expected to open",
+          "kind": "opens",
+          "dueOn": "2027-08-03",
+          "confirmed": false
+        },
+        {
+          "label": "Chevening deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-10-05",
+          "confirmed": false
+        }
+      ],
+      "workWhileStudying": "Up to 20 hours a week during term for degree students, full time in official vacations. Work pays part of living costs, not tuition."
+    },
+    {
+      "seedKey": "uk-commonwealth-masters",
+      "name": "Commonwealth Master's Scholarship",
+      "kind": "scholarship",
+      "country": "United Kingdom",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Fully funded one-year master's in the UK. Bangladesh is eligible.",
+      "costs": null,
+      "applyUrl": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarship/",
+      "infoUrl": "https://cscuk.fcdo.gov.uk/scholarships/commonwealth-masters-scholarship/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Not a direct application: you are nominated by the national nominating agency (University Grants Commission of Bangladesh), then apply to the CSC. The CSC requires no IELTS; universities may have their own rules.",
+      "notes": "The 2027 round closed on 20 October 2026. Watch the UGC Bangladesh call in mid-2027 for 2028 entry. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Look for the UGC Bangladesh Commonwealth call (2028 entry)",
+          "kind": "reminder",
+          "dueOn": "2027-07-01",
+          "confirmed": false
+        }
+      ],
+      "workWhileStudying": "Up to 20 hours a week during term for degree students, full time in official vacations. Work pays part of living costs, not tuition."
+    },
+    {
+      "seedKey": "guide-poland",
+      "name": "Universities in Poland (self-funded)",
+      "kind": "programme",
+      "country": "Poland",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university directly. Example: Warsaw University of Technology may accept an MOI letter for a bachelor's or master's taught entirely in English.",
+      "notes": "No national scholarship found that is open to Bangladesh for full degrees; tuition is set per university. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-hungary",
+      "name": "Universities in Hungary (self-funded)",
+      "kind": "programme",
+      "country": "Hungary",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://studyinhungary.hu",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university directly (many use DreamApply). Many universities accept an MOI letter or Duolingo; ask. Fully funded route: Stipendium Hungaricum.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "workWhileStudying": "Up to 30 hours a week during term; in vacations at most 90 days / 66 working days (ELTE)."
+    },
+    {
+      "seedKey": "guide-italy",
+      "name": "Universities in Italy (self-funded)",
+      "kind": "programme",
+      "country": "Italy",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": "https://www.universitaly.it",
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply through the university's portal, then pre-enrol on Universitaly for the visa. Many universities accept an MOI letter. Regional DSU grants and IYT can pay costs.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-france",
+      "name": "Universities in France (self-funded)",
+      "kind": "programme",
+      "country": "France",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": "https://pastel.diplomatie.gouv.fr/etudesenfrance",
+      "infoUrl": "https://www.campusfrance.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Bangladeshi students apply through Campus France 'Études en France' for most programmes. English-taught master's: the university decides on MOI.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-spain",
+      "name": "Universities in Spain (self-funded)",
+      "kind": "programme",
+      "country": "Spain",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university; master's degrees need a recognition check of your bachelor's. English proof rules differ.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-portugal",
+      "name": "Universities in Portugal (self-funded)",
+      "kind": "programme",
+      "country": "Portugal",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university (international student quota). Some accept an MOI letter.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-cyprus",
+      "name": "Universities in Cyprus (Republic, south) (self-funded)",
+      "kind": "programme",
+      "country": "Cyprus (Republic, south)",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Many private universities in the Republic of Cyprus accept an MOI letter; the public University of Cyprus usually asks for a test.",
+      "notes": "Only the Republic of Cyprus (south). Degrees from northern Cyprus are often not recognised in the EU. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-malta",
+      "name": "Universities in Malta (self-funded)",
+      "kind": "programme",
+      "country": "Malta",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.um.edu.mt",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "University of Malta and private institutions set their own English rules; ask about the MOI letter.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-lithuania",
+      "name": "Universities in Lithuania (self-funded)",
+      "kind": "programme",
+      "country": "Lithuania",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://studyin.lt",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university; several accept an English-medium degree as proof.",
+      "notes": "Lithuanian state scholarships for master's are not open to Bangladesh (2026 call). Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "workWhileStudying": "Up to 20 hours a week while enrolled (studyin.lt)."
+    },
+    {
+      "seedKey": "guide-latvia",
+      "name": "Universities in Latvia (self-funded)",
+      "kind": "programme",
+      "country": "Latvia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply to each university; ask whether the MOI letter is accepted.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-estonia",
+      "name": "Universities in Estonia (self-funded)",
+      "kind": "programme",
+      "country": "Estonia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinestonia.ee",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Most universities ask for an English test; a few accept English-medium degrees. Ask.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-czech",
+      "name": "Universities in Czech Republic (self-funded)",
+      "kind": "programme",
+      "country": "Czech Republic",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://studyin.gov.cz",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Studying in Czech is free; English-taught programmes charge fees. English proof per university.",
+      "notes": "Government scholarship: see the separate entry. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-slovakia",
+      "name": "Universities in Slovakia (self-funded)",
+      "kind": "programme",
+      "country": "Slovakia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Studying in Slovak is free; English-taught programmes charge fees. English proof per university.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-slovenia",
+      "name": "Universities in Slovenia (self-funded)",
+      "kind": "programme",
+      "country": "Slovenia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply per university; English proof rules differ.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-croatia",
+      "name": "Universities in Croatia (self-funded)",
+      "kind": "programme",
+      "country": "Croatia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply per university; few English-taught programmes.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-greece",
+      "name": "Universities in Greece (self-funded)",
+      "kind": "programme",
+      "country": "Greece",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Few English-taught master's at public universities; English proof per university.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-bulgaria",
+      "name": "Universities in Bulgaria (self-funded)",
+      "kind": "programme",
+      "country": "Bulgaria",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply per university; English proof per university.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-romania",
+      "name": "Universities in Romania (self-funded)",
+      "kind": "programme",
+      "country": "Romania",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://studyinromania.gov.ro",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Self-funded English-taught programmes exist; English proof per university. Government scholarship: see the separate entry.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-finland",
+      "name": "Universities in Finland (self-funded)",
+      "kind": "programme",
+      "country": "Finland",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": "https://opintopolku.fi",
+      "infoUrl": "https://www.studyinfinland.fi",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Universities give tuition waivers/scholarships to strong applicants. English: a degree from Bangladesh does not exempt you (e.g. Aalto lists the countries that count), so an English test is needed.",
+      "notes": "Joint application rounds usually open in December and close in January. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-sweden",
+      "name": "Universities in Sweden (self-funded)",
+      "kind": "programme",
+      "country": "Sweden",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": "https://www.universityadmissions.se",
+      "infoUrl": "https://studyinsweden.se",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply on universityadmissions.se. English 6 is required; check whether your Bangladeshi degree counts, otherwise take a test.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-netherlands",
+      "name": "Universities in Netherlands (self-funded)",
+      "kind": "programme",
+      "country": "Netherlands",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinnl.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply per university (often via Studielink). Most ask Bangladeshi applicants for IELTS/TOEFL.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-belgium",
+      "name": "Universities in Belgium (self-funded)",
+      "kind": "programme",
+      "country": "Belgium",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Flemish and French-speaking universities set their own rules; English-taught master's often ask for a test.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-denmark",
+      "name": "Universities in Denmark (self-funded)",
+      "kind": "programme",
+      "country": "Denmark",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://studyindenmark.dk",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Tuition for non-EU students; English proof per university, often a test.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-norway",
+      "name": "Universities in Norway (self-funded)",
+      "kind": "programme",
+      "country": "Norway",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinnorway.no",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Public universities charge non-EU students tuition since 2023; English proof usually a test.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-ireland",
+      "name": "Universities in Ireland (self-funded)",
+      "kind": "programme",
+      "country": "Ireland",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.educationinireland.com",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply per university; some accept English-medium degrees. GOI-IES: see the separate entry.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "workWhileStudying": "Up to 20 hours a week during term and 40 hours a week in the main holidays."
+    },
+    {
+      "seedKey": "guide-uk",
+      "name": "Universities in United Kingdom (self-funded)",
+      "kind": "programme",
+      "country": "United Kingdom",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://study-uk.britishcouncil.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Many UK universities accept an English-medium degree from Bangladesh with a good grade (check each). Chevening and Commonwealth: see the separate entries.",
+      "notes": "Not in the EU, but in Europe. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "workWhileStudying": "Up to 20 hours a week during term for degree students, full time in official vacations. Work pays part of living costs, not tuition."
+    },
+    {
+      "seedKey": "guide-switzerland",
+      "name": "Universities in Switzerland (self-funded)",
+      "kind": "programme",
+      "country": "Switzerland",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Mostly self-funded; ask each university about tuition waivers and merit scholarships.",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Low tuition at public universities but high living costs; English proof per university.",
+      "notes": "Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "de-daad-epos",
+      "name": "DAAD EPOS (development-related master's)",
+      "kind": "scholarship",
+      "country": "Germany",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "About €992 per month for master's students, plus travel and insurance (2027/28 guide).",
+      "costs": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.daad.de/en/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "For people from developing countries (OECD DAC list; Bangladesh is on it). Usually needs about two years of work experience after the bachelor's. You apply to the participating German university's course, not to DAAD; each course sets its own deadline (most between August and October). English: the course decides; many ask for a test, some accept an English-medium degree.",
+      "notes": "The 2027/28 round mostly closed in autumn 2026; the next one is for 2028/29. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Pick EPOS courses and note their deadlines (most August–October)",
+          "kind": "reminder",
+          "dueOn": "2027-07-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "guide-germany",
+      "name": "Universities in Germany (self-funded)",
+      "kind": "programme",
+      "country": "Germany",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Most public universities charge no tuition (Baden-Württemberg charges non-EU students per semester); a semester fee applies everywhere.",
+      "costs": "A blocked account for living costs is needed for the student visa.",
+      "applyUrl": null,
+      "infoUrl": "https://www.study-in-germany.de/en/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply directly or through uni-assist, depending on the university. Some universities accept an English-medium degree as English proof; many ask for IELTS/TOEFL. Ask each university.",
+      "notes": "Typical deadlines: 15 January (summer semester) and 15 July (winter semester), but they differ. Collected from secondary sources on 13 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "kr-gks-embassy",
+      "name": "Global Korea Scholarship (GKS) – Embassy track",
+      "kind": "scholarship",
+      "country": "South Korea",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Full: tuition, monthly allowance, one-way flight, and one year of Korean language study before the degree (a master's scholarship lasts 1 + 2 years). Bangladesh had 7 embassy-track places in 2026.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Master's students: up to 15 hours a week without TOPIK level 4, up to 30 with it; no limit at weekends and in vacations with TOPIK 3. You need a job offer and government permission before starting (Korea JoongAng Daily, Oct 2026). GKS scholars: check the GKS rules first.",
+      "applyUrl": "https://www.studyinkorea.go.kr/ko/plan/scholarship.do?tab=gks-tab1",
+      "infoUrl": "https://www.studyinkorea.go.kr/ko/plan/scholarship.do?tab=gks-tab1",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply online on Study in Korea during the embassy-track window; the Korean Embassy in Dhaka makes the first selection. You choose up to three universities. No English test is required (a test score only adds points); TOPIK 3+ adds 10% bonus points. CGPA must be at least 2.64/4.0; age under 40. Transcripts and degree certificate need attestation/apostille: start early.",
+      "notes": "2026 window was 12–25 February 2026 (official 2026 GKS-G guideline). 2027 expected similar. Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Prepare GKS papers: attested transcripts, 2 recommendation letters, personal statement, study plan",
+          "kind": "reminder",
+          "dueOn": "2027-01-15",
+          "confirmed": false
+        },
+        {
+          "label": "GKS embassy-track window expected to open",
+          "kind": "opens",
+          "dueOn": "2027-02-11",
+          "confirmed": false
+        },
+        {
+          "label": "GKS embassy-track deadline (expected)",
+          "kind": "deadline",
+          "dueOn": "2027-02-24",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "kr-gks-university",
+      "name": "Global Korea Scholarship (GKS) – University track",
+      "kind": "scholarship",
+      "country": "South Korea",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "not_required",
+      "minIelts": null,
+      "funding": "Same benefits as the embassy track. Bangladesh had 20 university-track places in 2026 (3 general, 17 R-GKS for regional universities).",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Master's students: up to 15 hours a week without TOPIK level 4, up to 30 with it; no limit at weekends and in vacations with TOPIK 3. You need a job offer and government permission before starting (Korea JoongAng Daily, Oct 2026). GKS scholars: check the GKS rules first.",
+      "applyUrl": "https://www.studyinkorea.go.kr/ko/plan/scholarship.do?tab=gks-tab1",
+      "infoUrl": "https://www.studyinkorea.go.kr/ko/plan/scholarship.do?tab=gks-tab1",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply directly to ONE Korean university that takes GKS university-track applicants; each sets its own deadline (usually February–March). You cannot apply to both tracks in the same year. Regional universities (R-GKS) have more places and less competition.",
+      "notes": "Documents of selected candidates go to NIIED by 1 May (2026). Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Check Korean universities' GKS university-track deadlines (most February–March)",
+          "kind": "reminder",
+          "dueOn": "2027-02-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "guide-korea",
+      "name": "Universities in South Korea (self-funded)",
+      "kind": "programme",
+      "country": "South Korea",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "University scholarships (tuition waivers) are common for international graduate students; ask each university.",
+      "costs": "Tuition and living costs vary by city; Seoul is the most expensive.",
+      "workWhileStudying": "Master's students: up to 15 hours a week without TOPIK level 4, up to 30 with it; no limit at weekends and in vacations with TOPIK 3. You need a job offer and government permission before starting (Korea JoongAng Daily, Oct 2026). GKS scholars: check the GKS rules first.",
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinkorea.go.kr",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Most English-taught graduate programmes ask for TOEFL/IELTS; some accept an English-medium certificate (KAIST waives it only for degrees completed in listed countries). Ask each university.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "my-mis",
+      "name": "Malaysia International Scholarship (MIS)",
+      "kind": "scholarship",
+      "country": "Malaysia",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "moi_ok",
+      "minIelts": null,
+      "funding": "Tuition paid to the university plus RM 1,500 a month (paid every four months after a progress report). Master's and PhD.",
+      "costs": "Tuition covered; living costs in Malaysia are low compared with Europe.",
+      "workWhileStudying": "Only during semester breaks longer than 7 days, at most 20 hours a week, in restaurants, mini-markets, hotels or petrol stations, with the university's approval; no work during term. No general post-study work visa.",
+      "applyUrl": "https://biasiswa.mohe.gov.my/INTER/index.php",
+      "infoUrl": "https://biasiswa.mohe.gov.my/INTER/index.php",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply online on the MOHE portal. CGPA at least 3.00 (or second class upper); age 40 or under. English: IELTS 6.0 / TOEFL 550, OR an official declaration from your university that your degree was taught in English. Eligibility: citizens of listed countries incl. Commonwealth countries in Asia — confirm Bangladesh with international@mohe.gov.my.",
+      "notes": "The 2026 call opened in spring 2026; 2027 dates not announced yet. Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Check whether the MIS 2027 call is open",
+          "kind": "reminder",
+          "dueOn": "2027-03-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "guide-malaysia",
+      "name": "Universities in Malaysia (self-funded)",
+      "kind": "programme",
+      "country": "Malaysia",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Public universities have lower fees; ask about graduate research assistantships.",
+      "costs": "Low living costs compared with Europe; tuition depends on the university.",
+      "workWhileStudying": "Only during semester breaks longer than 7 days, at most 20 hours a week, in restaurants, mini-markets, hotels or petrol stations, with the university's approval; no work during term. No general post-study work visa.",
+      "applyUrl": null,
+      "infoUrl": "https://educationmalaysia.gov.my",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Example: UTM asks for a CPA of at least 2.50/4 for coursework master's, and IELTS/TOEFL unless your previous study was in English. Ask each university whether the MOI letter is enough.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "uk-great-bangladesh",
+      "name": "GREAT Scholarships (Bangladesh)",
+      "kind": "scholarship",
+      "country": "United Kingdom",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "£10,000 towards tuition for a one-year taught master's at a participating UK university (2026-27 list incl. University of Glasgow in Scotland). Partial: you still pay the rest of the tuition and living costs.",
+      "costs": "UK student visa needs proof of £1,171 a month for living costs outside London (up to 9 months) plus unpaid tuition.",
+      "workWhileStudying": "Up to 20 hours a week during term for degree students, full time in official vacations. Work pays part of living costs, not tuition.",
+      "applyUrl": null,
+      "infoUrl": "https://study-uk.britishcouncil.org/scholarships/great-scholarships/bangladesh",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply to the course first, then to the scholarship through the university; deadlines differ. English: you must meet the university's requirement — for Bangladeshi applicants usually IELTS.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Check GREAT scholarship deadlines of participating universities",
+          "kind": "reminder",
+          "dueOn": "2027-03-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "guide-scotland",
+      "name": "Universities in Scotland (self-funded)",
+      "kind": "programme",
+      "country": "United Kingdom",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Few full scholarships; Chevening and Commonwealth (separate entries) are the fully funded routes.",
+      "costs": "Tuition for international master's is high; the visa needs proof of £1,171 a month for living costs (outside London) for up to 9 months.",
+      "workWhileStudying": "Up to 20 hours a week during term for degree students, full time in official vacations. Work pays part of living costs, not tuition.",
+      "applyUrl": null,
+      "infoUrl": null,
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Many Scottish universities require a secure English test (IELTS) from Bangladeshi applicants: Stirling says it accepts only a SELT for Bangladesh. Heriot-Watt asks for at least 3.0/4 from a 4-year Bangladeshi bachelor's. Plan Scotland after IELTS.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "cn-cgs-type-a",
+      "name": "Chinese Government Scholarship – Type A (via the Chinese Embassy, Dhaka)",
+      "kind": "scholarship",
+      "country": "China",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Full tuition, on-campus accommodation, medical insurance and a monthly stipend (bdnews24, 18 Nov 2026).",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Part-time work needs the university's and immigration's approval; options are limited.",
+      "applyUrl": "https://www.campuschina.org",
+      "infoUrl": "https://bd.china-embassy.gov.cn/eng/",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply on campuschina.org under the bilateral programme (Type A) for Bangladesh, choosing up to three universities; then submit the printed papers as the Embassy asks. Pick English-taught master's; English proof is set by the university (many accept an English-medium certificate). A physical examination form is required.",
+      "notes": "The 2027-28 round is open with deadline 10 January 2027 (bdnews24, 18 Nov 2026). Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Chinese Government Scholarship (Type A) deadline",
+          "kind": "deadline",
+          "dueOn": "2027-01-10",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "cn-cgs-type-b",
+      "name": "Chinese Government Scholarship – Type B (university programme)",
+      "kind": "scholarship",
+      "country": "China",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Same benefits as Type A; the Chinese university selects you.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Part-time work needs the university's and immigration's approval; options are limited.",
+      "applyUrl": "https://www.campuschina.org",
+      "infoUrl": "https://www.campuschina.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply to a Chinese university that takes CGS Type B applicants (programme code from the university), on campuschina.org and the university's own portal. Deadlines differ (often January–April). Contacting a professor first helps.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Check Chinese universities' CGS Type B deadlines",
+          "kind": "reminder",
+          "dueOn": "2027-01-05",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "guide-china",
+      "name": "Universities in China (self-funded)",
+      "kind": "programme",
+      "country": "China",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Provincial and university scholarships exist besides CGS.",
+      "costs": "Tuition and living costs are moderate.",
+      "workWhileStudying": "Part-time work needs the university's and immigration's approval; options are limited.",
+      "applyUrl": null,
+      "infoUrl": "https://www.campuschina.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Choose English-taught programmes; ask each university about English proof.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "jp-mext-embassy",
+      "name": "MEXT Scholarship (Japan) – Embassy recommendation, research students",
+      "kind": "scholarship",
+      "country": "Japan",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Japanese government scholarship: tuition, monthly allowance and flights.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Usually up to 28 hours a week (8 hours a day in long vacations) with a \"permission to engage in activity other than that permitted\" from immigration — general rule, check before you start.",
+      "applyUrl": "https://www.bd.emb-japan.go.jp/itpr_ja/00_000706.html",
+      "infoUrl": "https://www.studyinjapan.go.jp",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Applications go to the Ministry of Education, Bangladesh (not the Embassy). Document screening, then written exams in English and Japanese and an interview. You study in the same or a related field (Computer Science). Age limit: for the 2027 round, born on or after 2 April 1992.",
+      "notes": "The 2027 round is closed; the 2028 round is expected around April–May 2027. Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Watch for the MEXT 2028 call (Embassy of Japan, Dhaka)",
+          "kind": "reminder",
+          "dueOn": "2027-04-01",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "jp-mext-university",
+      "name": "MEXT Scholarship (Japan) – University recommendation",
+      "kind": "scholarship",
+      "country": "Japan",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Same MEXT benefits; the Japanese university nominates you.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Usually up to 28 hours a week (8 hours a day in long vacations) with a \"permission to engage in activity other than that permitted\" from immigration — general rule, check before you start.",
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinjapan.go.jp",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Apply to an English-taught graduate programme at a Japanese university that offers MEXT university-recommendation places; deadlines are set by each university (often a year before the start). A professor's acceptance usually helps.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-japan",
+      "name": "Universities in Japan (self-funded)",
+      "kind": "programme",
+      "country": "Japan",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "JASSO and university tuition waivers exist.",
+      "costs": "Tokyo is expensive; regional cities cost less.",
+      "workWhileStudying": "Usually up to 28 hours a week (8 hours a day in long vacations) with a \"permission to engage in activity other than that permitted\" from immigration — general rule, check before you start.",
+      "applyUrl": null,
+      "infoUrl": "https://www.studyinjapan.go.jp",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "English-taught graduate programmes set their own English rules; research students usually contact a professor first.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-taiwan",
+      "name": "Universities in Taiwan (university scholarships)",
+      "kind": "programme",
+      "country": "Taiwan",
+      "university": null,
+      "level": "both",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "Many universities give international students tuition waivers and monthly stipends. The government MOE Taiwan Scholarship is offered through Taiwan's offices per country; no Bangladesh guide was found.",
+      "costs": "Lower living costs than Japan or Korea.",
+      "workWhileStudying": "Up to 20 hours a week during term with a work permit, unlimited in winter and summer vacations — general rule, check.",
+      "applyUrl": null,
+      "infoUrl": "https://www.studyintaiwan.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "Apply directly to universities (application usually December–March for the autumn intake). English-taught programmes usually ask for IELTS 6.0 / TOEFL; ask whether an English-medium certificate is enough.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "nz-manaaki",
+      "name": "Manaaki New Zealand Scholarships",
+      "kind": "scholarship",
+      "country": "New Zealand",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "varies",
+      "minIelts": null,
+      "funding": "New Zealand government scholarship: tuition, living allowance, flights, insurance.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.nzscholarships.govt.nz",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Check first whether Bangladesh is an eligible country this year. Applications are online; the 2026 round was open 1 March – 10 April 2026 (University of Otago). An English test is usually required.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [
+        {
+          "label": "Manaaki: check eligibility and the 2027 round dates",
+          "kind": "reminder",
+          "dueOn": "2027-02-15",
+          "confirmed": false
+        }
+      ]
+    },
+    {
+      "seedKey": "au-australia-awards",
+      "name": "Australia Awards Scholarships (Bangladesh)",
+      "kind": "scholarship",
+      "country": "Australia",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Full tuition, flights, living allowance, health cover.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "Up to 48 hours per fortnight during study periods, unlimited in scheduled breaks — general rule, check the current visa conditions.",
+      "applyUrl": "https://australiaawardsbangladesh.org",
+      "infoUrl": "https://australiaawardsbangladesh.org",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "recommendation",
+        "ielts_result"
+      ],
+      "howToApply": "Needs at least four years of full-time relevant work experience, IELTS 6.5 (no band below 6.0), and a bachelor's equal to an Australian one — a published intake guide said degrees from private Bangladeshi universities are generally not considered equivalent. Applications are usually open February–April.",
+      "notes": "Not for you yet (work experience and IELTS). Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "status": "not_now"
+    },
+    {
+      "seedKey": "us-fulbright",
+      "name": "Fulbright Foreign Student Program (Bangladesh)",
+      "kind": "scholarship",
+      "country": "United States",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Full tuition, flights, monthly stipend, books.",
+      "costs": "Covered by the scholarship.",
+      "workWhileStudying": "F-1 students: on-campus jobs only, up to 20 hours a week during term; off-campus work needs special authorisation (CPT/OPT).",
+      "applyUrl": null,
+      "infoUrl": "https://bd.usembassy.gov",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "recommendation",
+        "ielts_result"
+      ],
+      "howToApply": "Needs at least two years of full-time relevant work experience and TOEFL iBT 90 / IELTS 7.0. The 2027-28 deadline was 11 July 2026 (Prothom Alo).",
+      "notes": "Not for you yet (work experience and test score). Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": [],
+      "status": "not_now"
+    },
+    {
+      "seedKey": "guide-usa",
+      "name": "Universities in the United States",
+      "kind": "programme",
+      "country": "United States",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "Master's funding is rare; funded routes are research assistantships, mostly for PhD students.",
+      "costs": "Very high tuition without funding.",
+      "workWhileStudying": "F-1 students: on-campus jobs only, up to 20 hours a week during term; off-campus work needs special authorisation (CPT/OPT).",
+      "applyUrl": null,
+      "infoUrl": "https://educationusa.state.gov",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Most programmes need TOEFL/IELTS (sometimes the GRE). Consider after an English test.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-canada",
+      "name": "Universities in Canada",
+      "kind": "programme",
+      "country": "Canada",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "No national master's scholarship for Bangladeshi students; thesis-based (research) master's are often funded by the supervisor.",
+      "costs": "High tuition for course-based master's.",
+      "workWhileStudying": "Up to 24 hours a week off campus during academic sessions, full time in scheduled breaks — general rule, check IRCC.",
+      "applyUrl": null,
+      "infoUrl": "https://www.educanada.ca",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter",
+        "recommendation"
+      ],
+      "howToApply": "Find a supervisor in your area first (e-mail professors with your research), then apply. IELTS is usually required.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-australia",
+      "name": "Universities in Australia",
+      "kind": "programme",
+      "country": "Australia",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "University merit scholarships usually cover part of the tuition.",
+      "costs": "High tuition and living costs.",
+      "workWhileStudying": "Up to 48 hours per fortnight during study periods, unlimited in scheduled breaks — general rule, check the current visa conditions.",
+      "applyUrl": null,
+      "infoUrl": "https://www.studyaustralia.gov.au",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "IELTS (or PTE/TOEFL) is required for the student visa and admission.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    },
+    {
+      "seedKey": "guide-new-zealand",
+      "name": "Universities in New Zealand",
+      "kind": "programme",
+      "country": "New Zealand",
+      "university": null,
+      "level": "master",
+      "field": null,
+      "englishRequirement": "test_required",
+      "minIelts": null,
+      "funding": "University scholarships are limited; Manaaki is the government route.",
+      "costs": "High tuition and living costs.",
+      "workWhileStudying": null,
+      "applyUrl": null,
+      "infoUrl": "https://www.studywithnewzealand.govt.nz",
+      "contactEmail": null,
+      "requiredDocs": [
+        "cv",
+        "motivation_letter"
+      ],
+      "howToApply": "IELTS is usually required.",
+      "notes": "Collected on 22 Nov 2026; check the official page before relying on dates and amounts.",
+      "deadlines": []
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$comment": "Seed templates (prompt §15). Inserted once when missing (by seedKey); edits in the app are never overwritten. Variables: {name} or {name|fallback}; spintax {a|b}. Text in [[double brackets]] must be replaced before an e-mail can be sent.",
+  "templates": [
+    {
+      "seedKey": "a-1",
+      "kind": "outreach",
+      "name": "Agencies · first e-mail",
+      "segment": "A",
+      "offer": null,
+      "step": 1,
+      "subject": "{Dev capacity|Development help|A dev partner} for {company}?",
+      "body": "{Hi|Hello} {first_name|there},\n\n{signal_line}\n\nI run Riyad Tech, a small engineering studio. We work behind agencies as their white-label dev team: custom web apps and APIs in Node.js, React/Next.js, MongoDB/PostgreSQL and Python, Docker/AWS deployment, and AI chatbots and AI agents for their clients (including open-source models from Hugging Face). Your name on the work, fixed quotes, EU-hosted, NDA from day one.\n\nWould a short call next week make sense, or should I send two examples first?\n\n{sender_name}\nRiyad Tech · riyadtech.xyz"
+    },
+    {
+      "seedKey": "a-2",
+      "kind": "outreach",
+      "name": "Agencies · follow-up 1 (+4 days)",
+      "segment": "A",
+      "offer": null,
+      "step": 2,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nQuick follow-up: happy to start with a small paid test task so you can judge the quality first.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "a-3",
+      "kind": "outreach",
+      "name": "Agencies · follow-up 2 (+7 days, last)",
+      "segment": "A",
+      "offer": null,
+      "step": 3,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nLast note from me: I can share case studies close to your kind of projects if that helps. If the timing is wrong, no worries at all.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "b-chatbot-1",
+      "kind": "outreach",
+      "name": "Businesses · AI chatbot · first e-mail",
+      "segment": "B",
+      "offer": "chatbot",
+      "step": 1,
+      "subject": "{A question about|Quick idea for} {company}'s website",
+      "body": "{Hi|Hello} {first_name|there},\n\n{signal_line}\n\nWe build AI assistants that answer visitors' questions from your own information (services, prices, opening hours, bookings) day and night, and hand over to your team when needed. It is set up for you, hosted in the EU, and you can stop any month.\n\nWould it be useful if I sent a short example made for {company}?\n\n{sender_name}\nRiyad Tech · riyadtech.xyz"
+    },
+    {
+      "seedKey": "b-chatbot-2",
+      "kind": "outreach",
+      "name": "Businesses · AI chatbot · follow-up 1 (+4 days)",
+      "segment": "B",
+      "offer": "chatbot",
+      "step": 2,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nJust following up: I could put together a short demo that answers a few real questions about {company}, so you can see how it would feel for your visitors. No cost and no commitment.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "b-chatbot-3",
+      "kind": "outreach",
+      "name": "Businesses · AI chatbot · follow-up 2 (+7 days, last)",
+      "segment": "B",
+      "offer": "chatbot",
+      "step": 3,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nLast note from me. Besides chatbots we also build AI agents that take over a repetitive task, such as answering quote requests or booking appointments. If either is ever useful, just reply; if not, no worries at all.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "b-agent-1",
+      "kind": "outreach",
+      "name": "Businesses · AI agent · first e-mail",
+      "segment": "B",
+      "offer": "agent",
+      "step": 1,
+      "subject": "{Saving time on|An idea for} {company}'s {quote requests|enquiries}",
+      "body": "{Hi|Hello} {first_name|there},\n\n{signal_line}\n\nWe build AI agents that handle this kind of repetitive work: they answer and qualify enquiries, book appointments and update the tools you already use, and pass anything unusual to your team. Set up for you, hosted in the EU, and you can stop any month.\n\nWould a short example of how it would work for {company} be useful?\n\n{sender_name}\nRiyad Tech · riyadtech.xyz"
+    },
+    {
+      "seedKey": "b-agent-2",
+      "kind": "outreach",
+      "name": "Businesses · AI agent · follow-up 1 (+4 days)",
+      "segment": "B",
+      "offer": "agent",
+      "step": 2,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nQuick follow-up: I could sketch how one of your everyday tasks (for example new enquiries) would run with an agent, step by step, so you can judge whether it is worth it.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "b-agent-3",
+      "kind": "outreach",
+      "name": "Businesses · AI agent · follow-up 2 (+7 days, last)",
+      "segment": "B",
+      "offer": "agent",
+      "step": 3,
+      "subject": "",
+      "body": "{Hi|Hello} {first_name|there},\n\nLast note from me: if saving a few hours a week on enquiries ever becomes a priority, just reply and I will send a short example. If the timing is wrong, no worries at all.\n\n{sender_name}"
+    },
+    {
+      "seedKey": "job-1",
+      "kind": "job",
+      "name": "Job application · English",
+      "segment": null,
+      "offer": null,
+      "step": 1,
+      "subject": "Application: {role} – {sender_name}",
+      "body": "Dear {first_name|Hiring Team},\n\nI would like to apply for the {role} position at {company}.\n\nI am a full-stack JavaScript developer: I build and run web applications end to end with Node.js, React/Next.js and TypeScript, with PostgreSQL or MongoDB, Docker and cloud deployment, and I add AI features (chatbots and agents) where they help.\n\n[[Write one or two sentences on why this company and this role, using the job advert. The e-mail cannot be sent while text in double brackets is left.]]\n\nMy CV is attached. I am based in Dhaka, Bangladesh, and ready to relocate to Germany. I would be glad to talk about how I can help your team.\n\nKind regards,\n{sender_name}"
+    }
+  ]
+}

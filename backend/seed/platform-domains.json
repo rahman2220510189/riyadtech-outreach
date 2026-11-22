@@ -1,0 +1,17 @@
+{
+  "$comment": "Not a business's own website: social networks, link pages, listings, booking and marketplace platforms. A place whose only website is on one of these (or a subdomain of one) is skipped.",
+  "domains": [
+    "facebook.com", "fb.com", "fb.me", "instagram.com", "twitter.com", "x.com", "linkedin.com", "youtube.com", "youtu.be",
+    "tiktok.com", "pinterest.com", "threads.net", "snapchat.com", "whatsapp.com", "wa.me", "t.me", "telegram.me",
+    "linktr.ee", "linkin.bio", "beacons.ai", "bio.link", "lnk.bio", "taplink.cc",
+    "google.com", "goo.gl", "g.page", "business.site", "maps.app.goo.gl", "sites.google.com",
+    "yelp.com", "yelp.co.uk", "yelp.ie", "yelp.com.au", "tripadvisor.com", "tripadvisor.co.uk", "tripadvisor.ie", "tripadvisor.com.au",
+    "yell.com", "checkatrade.com", "trustpilot.com", "foursquare.com", "nextdoor.com", "bbb.org", "yellowpages.com", "yellowpages.com.au", "truelocal.com.au", "goldenpages.ie",
+    "booking.com", "airbnb.com", "airbnb.co.uk", "expedia.com", "hotels.com", "agoda.com", "trivago.com", "vrbo.com",
+    "opentable.com", "opentable.co.uk", "resy.com", "booksy.com", "fresha.com", "treatwell.co.uk", "treatwell.ie", "vagaro.com", "mindbodyonline.com", "calendly.com", "setmore.com",
+    "zocdoc.com", "healthgrades.com", "doctolib.fr", "doctolib.de", "nhs.uk", "healthdirect.gov.au", "hotdoc.com.au", "healthengine.com.au",
+    "amazon.com", "amazon.co.uk", "ebay.com", "ebay.co.uk", "etsy.com", "gumtree.com", "craigslist.org",
+    "rightmove.co.uk", "zoopla.co.uk", "daft.ie", "zillow.com", "realtor.com", "realestate.com.au", "domain.com.au",
+    "autotrader.co.uk", "cars.com", "carsales.com.au", "uber.com", "ubereats.com", "deliveroo.co.uk", "just-eat.co.uk", "doordash.com", "menulog.com.au"
+  ]
+}

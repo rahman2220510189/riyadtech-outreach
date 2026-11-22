@@ -1,0 +1,1070 @@
+{
+ "$comment": "Markets. GB, IE, US and AU follow the prompt's rules (verified=true). All other countries are listed so they can be switched on in Settings, but start disabled with unverified rules: confirm each country's cold-email rules before enabling it. Blocked countries (DE, AT) need an extra confirmation. Russia and Belarus are left out (sanctions). 'enabled' is only applied when a country is first added. Not legal advice.",
+ "countries": [
+  {
+   "code": "GB",
+   "name": "United Kingdom",
+   "enabled": true,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "timezones": [
+    "Europe/London"
+   ],
+   "bbox": [
+    -8.65,
+    49.86,
+    1.77,
+    60.86
+   ],
+   "outreachRules": {
+    "law": "PECR + UK GDPR",
+    "genericOnly": true,
+    "notes": "Corporate addresses with a clear opt-out; avoid sole traders' personal addresses.",
+    "verified": true
+   },
+   "regionImports": false
+  },
+  {
+   "code": "IE",
+   "name": "Ireland",
+   "enabled": true,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "timezones": [
+    "Europe/Dublin"
+   ],
+   "bbox": [
+    -10.69,
+    51.39,
+    -5.99,
+    55.43
+   ],
+   "outreachRules": {
+    "law": "ePrivacy + GDPR",
+    "genericOnly": true,
+    "notes": "Prefer generic company addresses; opt-out in every email.",
+    "verified": true
+   },
+   "regionImports": false
+  },
+  {
+   "code": "US",
+   "name": "United States",
+   "enabled": true,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "timezones": [
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Phoenix",
+    "America/Los_Angeles",
+    "America/Anchorage",
+    "Pacific/Honolulu"
+   ],
+   "bbox": [
+    -179.2,
+    18.9,
+    -66.9,
+    71.4
+   ],
+   "outreachRules": {
+    "law": "CAN-SPAM",
+    "genericOnly": false,
+    "notes": "Truthful subject, sender identification, valid postal address, working unsubscribe honoured within 10 business days (we honour immediately).",
+    "verified": true
+   },
+   "regionImports": true
+  },
+  {
+   "code": "AU",
+   "name": "Australia",
+   "enabled": true,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "timezones": [
+    "Australia/Sydney",
+    "Australia/Melbourne",
+    "Australia/Brisbane",
+    "Australia/Adelaide",
+    "Australia/Darwin",
+    "Australia/Perth",
+    "Australia/Hobart"
+   ],
+   "bbox": [
+    112.9,
+    -43.7,
+    153.7,
+    -10.6
+   ],
+   "outreachRules": {
+    "law": "Spam Act 2003",
+    "genericOnly": false,
+    "conspicuouslyPublishedOnly": true,
+    "notes": "Only addresses conspicuously published on the business's own site, about their business role; sender identification and unsubscribe required.",
+    "verified": true
+   },
+   "regionImports": true
+  },
+  {
+   "code": "NL",
+   "name": "Netherlands",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Amsterdam"
+   ],
+   "bbox": [
+    3.31,
+    50.75,
+    7.23,
+    53.56
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "BE",
+   "name": "Belgium",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Brussels"
+   ],
+   "bbox": [
+    2.5,
+    49.5,
+    6.41,
+    51.51
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "LU",
+   "name": "Luxembourg",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Luxembourg"
+   ],
+   "bbox": [
+    5.73,
+    49.44,
+    6.53,
+    50.18
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "FR",
+   "name": "France",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Paris"
+   ],
+   "bbox": [
+    -5.2,
+    41.3,
+    9.6,
+    51.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "ES",
+   "name": "Spain",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Madrid",
+    "Atlantic/Canary"
+   ],
+   "bbox": [
+    -18.2,
+    27.6,
+    4.4,
+    43.8
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "PT",
+   "name": "Portugal",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Lisbon",
+    "Atlantic/Madeira",
+    "Atlantic/Azores"
+   ],
+   "bbox": [
+    -31.3,
+    32.6,
+    -6.2,
+    42.2
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "IT",
+   "name": "Italy",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Rome"
+   ],
+   "bbox": [
+    6.6,
+    35.5,
+    18.6,
+    47.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "MT",
+   "name": "Malta",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Malta"
+   ],
+   "bbox": [
+    14.1,
+    35.8,
+    14.6,
+    36.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "CY",
+   "name": "Cyprus",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Asia/Nicosia"
+   ],
+   "bbox": [
+    32.2,
+    34.5,
+    34.7,
+    35.8
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "GR",
+   "name": "Greece",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Athens"
+   ],
+   "bbox": [
+    19.3,
+    34.8,
+    29.7,
+    41.8
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "DK",
+   "name": "Denmark",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Copenhagen"
+   ],
+   "bbox": [
+    8.0,
+    54.5,
+    15.2,
+    57.8
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "SE",
+   "name": "Sweden",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Stockholm"
+   ],
+   "bbox": [
+    10.96,
+    55.34,
+    24.17,
+    69.06
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "FI",
+   "name": "Finland",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Helsinki"
+   ],
+   "bbox": [
+    20.5,
+    59.7,
+    31.6,
+    70.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "EE",
+   "name": "Estonia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Tallinn"
+   ],
+   "bbox": [
+    21.7,
+    57.5,
+    28.3,
+    59.7
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "LV",
+   "name": "Latvia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Riga"
+   ],
+   "bbox": [
+    20.9,
+    55.6,
+    28.3,
+    58.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "LT",
+   "name": "Lithuania",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Vilnius"
+   ],
+   "bbox": [
+    20.9,
+    53.9,
+    26.9,
+    56.5
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "PL",
+   "name": "Poland",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Warsaw"
+   ],
+   "bbox": [
+    14.1,
+    49.0,
+    24.2,
+    54.9
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "CZ",
+   "name": "Czechia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Prague"
+   ],
+   "bbox": [
+    12.1,
+    48.5,
+    18.9,
+    51.1
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "SK",
+   "name": "Slovakia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Bratislava"
+   ],
+   "bbox": [
+    16.8,
+    47.7,
+    22.6,
+    49.6
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "HU",
+   "name": "Hungary",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Budapest"
+   ],
+   "bbox": [
+    16.1,
+    45.7,
+    22.9,
+    48.6
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "SI",
+   "name": "Slovenia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Ljubljana"
+   ],
+   "bbox": [
+    13.3,
+    45.4,
+    16.6,
+    46.9
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "HR",
+   "name": "Croatia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Zagreb"
+   ],
+   "bbox": [
+    13.4,
+    42.3,
+    19.5,
+    46.6
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "RO",
+   "name": "Romania",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Bucharest"
+   ],
+   "bbox": [
+    20.2,
+    43.6,
+    29.8,
+    48.3
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "BG",
+   "name": "Bulgaria",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Sofia"
+   ],
+   "bbox": [
+    22.3,
+    41.2,
+    28.7,
+    44.3
+   ],
+   "outreachRules": {
+    "law": "ePrivacy Directive + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. EU countries apply the ePrivacy Directive differently to business e-mail; some require prior consent. Check the national rules before enabling."
+   }
+  },
+  {
+   "code": "NO",
+   "name": "Norway",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Oslo"
+   ],
+   "bbox": [
+    4.5,
+    57.9,
+    31.2,
+    71.2
+   ],
+   "outreachRules": {
+    "law": "EEA: ePrivacy rules + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "IS",
+   "name": "Iceland",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Atlantic/Reykjavik"
+   ],
+   "bbox": [
+    -24.6,
+    63.3,
+    -13.4,
+    66.6
+   ],
+   "outreachRules": {
+    "law": "EEA: ePrivacy rules + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "LI",
+   "name": "Liechtenstein",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Vaduz"
+   ],
+   "bbox": [
+    9.47,
+    47.04,
+    9.64,
+    47.28
+   ],
+   "outreachRules": {
+    "law": "EEA: ePrivacy rules + GDPR (national rules vary)",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "CH",
+   "name": "Switzerland",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Zurich"
+   ],
+   "bbox": [
+    5.9,
+    45.8,
+    10.5,
+    47.9
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "AD",
+   "name": "Andorra",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Andorra"
+   ],
+   "bbox": [
+    1.4,
+    42.4,
+    1.8,
+    42.7
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "MC",
+   "name": "Monaco",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Monaco"
+   ],
+   "bbox": [
+    7.4,
+    43.72,
+    7.44,
+    43.76
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "SM",
+   "name": "San Marino",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/San_Marino"
+   ],
+   "bbox": [
+    12.4,
+    43.89,
+    12.52,
+    43.99
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "RS",
+   "name": "Serbia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Belgrade"
+   ],
+   "bbox": [
+    18.8,
+    42.2,
+    23.1,
+    46.2
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "BA",
+   "name": "Bosnia and Herzegovina",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Sarajevo"
+   ],
+   "bbox": [
+    15.7,
+    42.5,
+    19.7,
+    45.3
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "ME",
+   "name": "Montenegro",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Podgorica"
+   ],
+   "bbox": [
+    18.4,
+    41.8,
+    20.4,
+    43.6
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "MK",
+   "name": "North Macedonia",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Skopje"
+   ],
+   "bbox": [
+    20.4,
+    40.8,
+    23.1,
+    42.4
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "AL",
+   "name": "Albania",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Tirane"
+   ],
+   "bbox": [
+    19.2,
+    39.6,
+    21.1,
+    42.7
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "XK",
+   "name": "Kosovo",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": true,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Belgrade"
+   ],
+   "bbox": [
+    20.0,
+    41.8,
+    21.8,
+    43.3
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "MD",
+   "name": "Moldova",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Chisinau"
+   ],
+   "bbox": [
+    26.6,
+    45.4,
+    30.2,
+    48.5
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "UA",
+   "name": "Ukraine",
+   "enabled": false,
+   "blocked": false,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Kyiv"
+   ],
+   "bbox": [
+    22.1,
+    44.3,
+    40.3,
+    52.4
+   ],
+   "outreachRules": {
+    "law": "National rules",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Not verified. Check the national rules for B2B cold e-mail before enabling."
+   }
+  },
+  {
+   "code": "DE",
+   "name": "Germany",
+   "enabled": false,
+   "blocked": true,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Berlin"
+   ],
+   "bbox": [
+    5.87,
+    47.27,
+    15.04,
+    55.06
+   ],
+   "outreachRules": {
+    "law": "UWG §7",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Blocked by default: cold e-mail to businesses generally needs prior consent. Enable only after legal advice."
+   },
+   "jobSearch": true
+  },
+  {
+   "code": "AT",
+   "name": "Austria",
+   "enabled": false,
+   "blocked": true,
+   "allowWholeCountry": false,
+   "regionImports": false,
+   "timezones": [
+    "Europe/Vienna"
+   ],
+   "bbox": [
+    9.53,
+    46.37,
+    17.16,
+    49.02
+   ],
+   "outreachRules": {
+    "law": "TKG 2021 §174",
+    "genericOnly": true,
+    "verified": false,
+    "notes": "Blocked by default: cold e-mail generally needs prior consent. Enable only after legal advice."
+   }
+  }
+ ],
+ "$regionComment": "GeoNames admin1 codes that are not ISO 3166-2 codes. Others become <country>-<admin1> (US-TX, GB-ENG).",
+ "geonamesAdmin1ToIso": {
+  "AU": {
+   "01": "AU-ACT",
+   "02": "AU-NSW",
+   "03": "AU-NT",
+   "04": "AU-QLD",
+   "05": "AU-SA",
+   "06": "AU-TAS",
+   "07": "AU-VIC",
+   "08": "AU-WA"
+  }
+ }
+}
