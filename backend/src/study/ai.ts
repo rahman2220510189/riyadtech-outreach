@@ -21,7 +21,26 @@ export interface ChatOptions {
 }
 type ChatFn = (key: string, model: string, messages: ChatMessage[], opts?: ChatOptions) => Promise<string>;
 
+/** Groq could not parse the model's own output (code tool_use_failed): a one-off, worth one more try. */
+export function isGenerationFailure(msg: string): boolean {
+  return /parsing failed|failed_generation|tool_use_failed|could not be parsed/i.test(msg);
+}
+
+/** A wrong or retired model name — not every message that mentions "the model". */
+export function isModelProblem(status: number, msg: string): boolean {
+  return status === 404 || /model[^.]{0,60}(not found|does not exist|decommissioned|deprecated|not supported|no access|unknown)|(unknown|invalid) model/i.test(msg);
+}
+
 async function groqChat(key: string, model: string, messages: ChatMessage[], opts: ChatOptions = {}): Promise<string> {
+  try {
+    return await groqChatOnce(key, model, messages, opts);
+  } catch (err) {
+    if (!(err instanceof AppError) || err.code !== "AI_GENERATION") throw err;
+    return groqChatOnce(key, model, messages, opts);
+  }
+}
+
+async function groqChatOnce(key: string, model: string, messages: ChatMessage[], opts: ChatOptions = {}): Promise<string> {
   let res: Response;
   try {
     res = await fetch(GROQ_URL, {
@@ -50,9 +69,11 @@ async function groqChat(key: string, model: string, messages: ChatMessage[], opt
     }
     if (res.status === 401) throw new AppError(502, "AI_KEY", "Groq refused the API key (GROQ_API_KEY in backend/.env). Create a new key at console.groq.com/keys.");
     if (res.status === 429) throw new AppError(429, "AI_LIMIT", "Groq's free limit is reached for now; try again in a minute.");
+    if (isGenerationFailure(`${msg} ${text.slice(0, 500)}`))
+      throw new AppError(502, "AI_GENERATION", "Groq could not read the model's answer this time (tried twice); the next run tries again.");
     if (opts.browserSearch && /tool|browser|search|plan|billing|not available|not supported/i.test(msg))
       throw new AppError(502, "AI_SEARCH", `Groq did not run its web search: ${msg} (it may need a paid plan or a gpt-oss model).`);
-    if (res.status === 404 || /model/i.test(msg)) throw new AppError(502, "AI_MODEL", `Groq: ${msg} Set GROQ_MODEL in backend/.env to a production model from console.groq.com/docs/models.`);
+    if (isModelProblem(res.status, msg)) throw new AppError(502, "AI_MODEL", `Groq: ${msg} Set GROQ_MODEL in backend/.env to a production model from console.groq.com/docs/models.`);
     throw new AppError(502, "AI_FAILED", `Groq answered HTTP ${res.status}: ${msg}`);
   }
   const content = (JSON.parse(text) as { choices?: { message?: { content?: string } }[] }).choices?.[0]?.message?.content;
