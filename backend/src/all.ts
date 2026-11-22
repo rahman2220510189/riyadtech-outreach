@@ -6,6 +6,7 @@
  */
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { startKeepAwake } from "./keepawake.js";
 import { supervise } from "./supervisor.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -18,8 +19,14 @@ const supervision = supervise([
   { name: "worker", args: [...loader, join(here, `worker${ext}`)] },
 ]);
 
+// Free Render services sleep after 15 idle minutes; this keeps the worker running (see keepawake.ts).
+const keepAwake = startKeepAwake(process.env, (line) => process.stdout.write(`${line}\n`));
+
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => supervision.stop(`received ${signal}`));
 }
 
-void supervision.done.then((code) => process.exit(code));
+void supervision.done.then((code) => {
+  keepAwake?.stop();
+  process.exit(code);
+});
