@@ -21,6 +21,7 @@ export interface DnsResult {
 export interface TestResult {
   smtp: { ok: boolean; message: string };
   imap: { ok: boolean; message: string };
+  gmail?: { ok: boolean; message: string };
   at: string;
 }
 
@@ -49,9 +50,12 @@ export interface Mailbox {
   lastTest: TestResult | null;
   lastDnsAt: string | null;
   lastDns: DnsResult | null;
+  gmailConnected: boolean;
+  gmailConnectedAt: string | null;
+  gmailError: string | null;
 }
 
-export type MailboxInput = Partial<Omit<Mailbox, "id" | "smtpPasswordSet" | "imapPasswordSet" | "allowedToday" | "warmupStartedOn" | "lastTestAt" | "lastTest" | "lastDnsAt" | "lastDns">> & {
+export type MailboxInput = Partial<Omit<Mailbox, "id" | "smtpPasswordSet" | "imapPasswordSet" | "allowedToday" | "warmupStartedOn" | "lastTestAt" | "lastTest" | "lastDnsAt" | "lastDns" | "gmailConnected" | "gmailConnectedAt" | "gmailError">> & {
   smtpPassword?: string;
   imapPassword?: string;
 };
@@ -59,7 +63,13 @@ export type MailboxInput = Partial<Omit<Mailbox, "id" | "smtpPasswordSet" | "ima
 export function useMailboxes() {
   return useQuery({
     queryKey: ["mailboxes"],
-    queryFn: async () => (await api.get<{ items: Mailbox[]; sendingEnabled: boolean; encryptionKeySet: boolean }>("/mailboxes")).data,
+    queryFn: async () => (await api.get<{
+          items: Mailbox[];
+          sendingEnabled: boolean;
+          encryptionKeySet: boolean;
+          mailDelivery: "direct" | "outbox";
+          gmail: { available: boolean; redirectUri: string };
+        }>("/mailboxes")).data,
   });
 }
 
@@ -76,6 +86,24 @@ export function useDeleteMailbox() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => (await api.delete(`/mailboxes/${id}`)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["mailboxes"] }),
+  });
+}
+
+/** Asks the server for Google's sign-in address and goes there. */
+export function useConnectGmail() {
+  return useMutation({
+    mutationFn: async (id: number) => (await api.post<{ url: string }>(`/mailboxes/${id}/gmail/start`, {})).data,
+    onSuccess: (r) => {
+      window.location.href = r.url;
+    },
+  });
+}
+
+export function useDisconnectGmail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => (await api.post<Mailbox>(`/mailboxes/${id}/gmail/disconnect`, {})).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["mailboxes"] }),
   });
 }

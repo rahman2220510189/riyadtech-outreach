@@ -14,7 +14,7 @@ import { applyEmail } from "./leads.js";
 
 export interface ApplicationsRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL" | "SENDING_ENABLED" | "MAIL_DELIVERY">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL" | "SENDING_ENABLED" | "MAIL_DELIVERY" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });

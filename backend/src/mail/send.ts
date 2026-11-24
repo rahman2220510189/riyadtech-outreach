@@ -3,16 +3,54 @@ import type { Db } from "../db/client.js";
 import type { Mailbox } from "../generated/prisma/client.js";
 import { AppError } from "../lib/errors.js";
 import { mailboxConfigs } from "../routes/mailboxes.js";
+import { decryptSecret } from "./crypto.js";
+import { gmailConfigured, sendGmail } from "./gmail.js";
 import { type OutboxRef, queueMail } from "./outbox.js";
 import { mailErrorText, newMessageId, type OutgoingMail, sendMail } from "./transport.js";
 
+export type SendEnv = Pick<Env, "ENCRYPTION_KEY" | "MAIL_DELIVERY" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "PUBLIC_BASE_URL">;
+
+/** Is this mailbox connected to the Gmail API (and the server has the Google client)? */
+export function usesGmail(m: Mailbox, env: Pick<Env, "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET">): boolean {
+  return !!m.gmailRefreshTokenEnc && gmailConfigured(env);
+}
+
+/**
+ * Hands one message to the mailbox's provider: the Gmail API when connected, otherwise SMTP.
+ * Throws with a plain-words message on failure. Remembers Gmail connection problems on the mailbox.
+ */
+export async function transmit(db: Db, env: SendEnv, mailbox: Mailbox, mail: OutgoingMail): Promise<{ messageId: string; response: string }> {
+  if (usesGmail(mailbox, env)) {
+    try {
+      const r = await sendGmail(env, decryptSecret(env.ENCRYPTION_KEY, mailbox.gmailRefreshTokenEnc!), mail);
+      if (mailbox.gmailError) await db.mailbox.update({ where: { id: mailbox.id }, data: { gmailError: null } });
+      return { messageId: mail.messageId, response: `Gmail API: accepted (id ${r.id})` };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (err instanceof AppError && err.statusCode === 401) await db.mailbox.update({ where: { id: mailbox.id }, data: { gmailError: message.slice(0, 500) } });
+      throw new MailSendError(message);
+    }
+  }
+  const { smtp } = mailboxConfigs(mailbox, env.ENCRYPTION_KEY);
+  try {
+    const r = await sendMail(smtp, mail);
+    if (r.rejected.length > 0 && r.accepted.length === 0) throw Object.assign(new Error(`The server refused ${r.rejected.join(", ")}: ${r.response}`), { code: "EENVELOPE" });
+    return { messageId: r.messageId || mail.messageId, response: r.response };
+  } catch (err) {
+    throw new MailSendError(mailErrorText(err, "SMTP"));
+  }
+}
+
+export class MailSendError extends Error {}
+
 /**
  * Sends one e-mail outside campaigns (test or application) and writes it to mail_log.
- * With MAIL_DELIVERY=outbox it is queued instead (ok, queued: true) and sent later by the outbox on my PC.
+ * A mailbox connected to Gmail sends over the Gmail API right away. Otherwise, with
+ * MAIL_DELIVERY=outbox it is queued (ok, queued: true) and sent later by the outbox on my PC.
  */
 export async function sendLogged(
   db: Db,
-  env: Pick<Env, "ENCRYPTION_KEY" | "MAIL_DELIVERY">,
+  env: SendEnv,
   input: {
     kind: "test" | "application" | "study";
     mailbox: Mailbox;
@@ -38,7 +76,7 @@ export async function sendLogged(
     attachments: input.attachments,
     messageId,
   };
-  if (env.MAIL_DELIVERY === "outbox") {
+  if (env.MAIL_DELIVERY === "outbox" && !usesGmail(input.mailbox, env)) {
     const response = "Queued: it goes out when the outbox runs on your PC (npm run mail:outbox).";
     const log = await db.mailLog.create({
       data: { kind: input.kind, mailboxId: input.mailbox.id, toEmail: input.to, subject: input.subject, messageId, status: "queued", smtpResponse: response, createdBy: input.actor },
@@ -46,16 +84,17 @@ export async function sendLogged(
     await queueMail(db, log.id, input.mailbox.id, mail, input.ref);
     return { ok: true, queued: true, messageId, response, logId: log.id };
   }
-  const { smtp } = mailboxConfigs(input.mailbox, env.ENCRYPTION_KEY);
+  // Missing passwords and similar setup problems throw (AppError) before anything is logged.
+  if (!usesGmail(input.mailbox, env)) mailboxConfigs(input.mailbox, env.ENCRYPTION_KEY);
   try {
-    const r = await sendMail(smtp, mail);
-    if (r.rejected.length > 0 && r.accepted.length === 0) throw Object.assign(new Error(`The server refused ${r.rejected.join(", ")}: ${r.response}`), { code: "EENVELOPE" });
+    const r = await transmit(db, env, input.mailbox, mail);
     const log = await db.mailLog.create({
-      data: { kind: input.kind, mailboxId: input.mailbox.id, toEmail: input.to, subject: input.subject, messageId: r.messageId || messageId, status: "sent", smtpResponse: r.response.slice(0, 500), createdBy: input.actor },
+      data: { kind: input.kind, mailboxId: input.mailbox.id, toEmail: input.to, subject: input.subject, messageId: r.messageId, status: "sent", smtpResponse: r.response.slice(0, 500), createdBy: input.actor },
     });
-    return { ok: true, messageId: r.messageId || messageId, response: r.response, logId: log.id };
+    return { ok: true, messageId: r.messageId, response: r.response, logId: log.id };
   } catch (err) {
-    const error = mailErrorText(err, "SMTP");
+    if (!(err instanceof MailSendError)) throw err;
+    const error = err.message;
     const log = await db.mailLog.create({
       data: { kind: input.kind, mailboxId: input.mailbox.id, toEmail: input.to, subject: input.subject, status: "failed", error: error.slice(0, 1000), createdBy: input.actor },
     });

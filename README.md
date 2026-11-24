@@ -84,6 +84,8 @@ flowchart LR
 - **Mail on a free host.** Render's free plan blocks SMTP, so the hosted tool queues e-mails in an
   outbox table, and `npm run mail:outbox` on my PC sends them through the mailbox's own SMTP
   server and writes back the result. Each message is claimed once, so nothing is sent twice.
+  A Gmail or Google Workspace mailbox can instead be connected once with OAuth (send-only scope),
+  and then it sends over the Gmail API (HTTPS) with no PC needed.
 - **Security.** Single admin with bcrypt password hashing (cost 12), an HttpOnly JWT cookie, a CSRF header,
   login rate limiting and strict CORS. Secrets live only in environment variables. Mailbox
   passwords are encrypted at rest. In production, the app refuses to start with placeholder secrets.

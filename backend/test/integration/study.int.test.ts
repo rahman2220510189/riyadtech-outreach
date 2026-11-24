@@ -13,11 +13,14 @@ import { createDb, type Db } from "../../src/db/client.js";
 import { JOB_SUMMARIZERS } from "../../src/jobs/handlers.js";
 import { JobStore } from "../../src/jobs/store.js";
 import { encryptSecret } from "../../src/mail/crypto.js";
+import { setGmailTestHooks } from "../../src/mail/gmail.js";
 import { deliverOutbox } from "../../src/mail/outbox.js";
 import { type OutgoingMail, setMailTestHooks } from "../../src/mail/transport.js";
 import { syncStudySeeds } from "../../src/seed/sync.js";
 import { type ChatMessage, setAiTestHook } from "../../src/study/ai.js";
 import { testEnv } from "../helpers/env.js";
+
+const urlOf = (x: unknown): string => (typeof x === "string" ? x : x instanceof URL ? x.href : x instanceof Request ? x.url : "");
 import { testDatabaseUrl } from "../helpers/test-db.js";
 
 const url = testDatabaseUrl();
@@ -279,6 +282,63 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     expect(d3).toMatchObject({ interrupted: 1, sent: 0 });
     expect((await get(`/api/v1/study/emails/${id3}`)).json<{ status: string; error: string }>()).toMatchObject({ status: "failed" });
     await db.mailLog.deleteMany({ where: { toEmail: "outbox@testuni.invalid" } });
+  });
+
+  it("Gmail API: connect the mailbox with Google, then it sends over HTTPS even where SMTP is blocked", async () => {
+    const gEnv = { PUBLIC_BASE_URL: "https://outreach.zz.invalid", GROQ_API_KEY: "gsk_test_0123456789", SENDING_ENABLED: "true", MAIL_DELIVERY: "outbox", GOOGLE_CLIENT_ID: "zz-client.apps.googleusercontent.com", GOOGLE_CLIENT_SECRET: "zz-secret-123456" };
+    const appGmail = await buildApp(testEnv(gEnv), { authStore: prismaAuthStore(db), authOptions: { dummyHashCost: 4 }, data: { db, jobs: new JobStore(db, JOB_SUMMARIZERS) } });
+    const calls: { url: string; body: string }[] = [];
+    let account = "someone.else@gmail.com";
+    setGmailTestHooks({
+      fetch: (url, init) => {
+        calls.push({ url: urlOf(url), body: typeof init?.body === "string" ? init.body : "" });
+        const u = urlOf(url);
+        const idToken = `x.${Buffer.from(JSON.stringify({ email: account, email_verified: true })).toString("base64url")}.y`;
+        const body = u.includes("/token") ? { access_token: "at-zz", refresh_token: "rt-zz", id_token: idToken, expires_in: 3600 } : u.includes("/revoke") ? {} : { id: "gmail-msg-1" };
+        return Promise.resolve(new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } }));
+      },
+    });
+    try {
+      const list = (await appGmail.inject({ method: "GET", url: "/api/v1/mailboxes", cookies: cookie })).json<{ gmail: { available: boolean; redirectUri: string } }>();
+      expect(list.gmail).toEqual({ available: true, redirectUri: "https://outreach.zz.invalid/api/v1/mailboxes/gmail/callback" });
+      const start = async () => new URL((await send("POST", `/api/v1/mailboxes/${mailboxId}/gmail/start`, {}, appGmail)).json<{ url: string }>().url).searchParams.get("state")!;
+      const callback = async (state: string) => appGmail.inject({ method: "GET", url: `/api/v1/mailboxes/gmail/callback?code=zz-code&state=${encodeURIComponent(state)}`, cookies: cookie });
+
+      // Signed in with the wrong Google account: refused, token given back.
+      let r = await callback(await start());
+      expect(r.statusCode).toBe(302);
+      expect(decodeURIComponent(r.headers.location!)).toMatch(/gmail=error.*someone\.else@gmail\.com/);
+      expect(calls.some((c) => c.url.includes("/revoke"))).toBe(true);
+      // A forged state is refused.
+      expect(decodeURIComponent((await callback("1.9999999999999.x.bad")).headers.location!)).toMatch(/gmail=error/);
+
+      account = "student@uni.invalid";
+      r = await callback(await start());
+      expect(r.headers.location).toBe("https://outreach.zz.invalid/mailboxes?gmail=connected&mailbox=student%40uni.invalid");
+      const box = await db.mailbox.findUniqueOrThrow({ where: { id: BigInt(mailboxId) } });
+      expect(box.gmailRefreshTokenEnc).toBeTruthy();
+      expect(box.gmailRefreshTokenEnc).not.toContain("rt-zz");
+
+      // Sending goes straight out through the Gmail API: no outbox, no SMTP.
+      const p = (await get("/api/v1/study/programs?status=all")).json<{ items: { id: number; name: string }[] }>().items.find((i) => i.name.startsWith("ZZ"))!;
+      const d = (await send("POST", "/api/v1/study/emails", { programId: p.id, useAi: false, mailboxId })).json<{ id: number }>();
+      await send("PATCH", `/api/v1/study/emails/${d.id}`, { subject: "ZZ gmail", body: "Dear Admissions Team,\n\nA question.\n\nKind regards,\nRiyad", toEmail: "gmail@testuni.invalid" });
+      const smtpBefore = sent.length;
+      const res = await send("POST", `/api/v1/study/emails/${d.id}/send`, undefined, appGmail);
+      expect(res.json()).toMatchObject({ status: "sent", waiting: false });
+      expect(sent.length).toBe(smtpBefore);
+      const raw = Buffer.from((JSON.parse(calls.at(-1)!.body) as { raw: string }).raw, "base64url").toString("utf8");
+      expect(raw).toMatch(/^Subject: ZZ gmail/m);
+      expect(await db.mailLog.findFirst({ where: { toEmail: "gmail@testuni.invalid" } })).toMatchObject({ status: "sent", smtpResponse: "Gmail API: accepted (id gmail-msg-1)" });
+
+      const off = await send("POST", `/api/v1/mailboxes/${mailboxId}/gmail/disconnect`, {}, appGmail);
+      expect(off.json()).toMatchObject({ gmailConnected: false });
+    } finally {
+      setGmailTestHooks({});
+      await db.mailLog.deleteMany({ where: { toEmail: "gmail@testuni.invalid" } });
+      await db.mailbox.update({ where: { id: BigInt(mailboxId) }, data: { gmailRefreshTokenEnc: null, gmailConnectedAt: null } });
+      await appGmail.close();
+    }
   });
 
   it("application window: open, probably open, opens soon; the open filter and the overview list", async () => {

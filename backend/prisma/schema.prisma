@@ -526,6 +526,11 @@ model Mailbox {
   lastTest        Json?         @map("last_test")
   lastDnsAt       DateTime?     @map("last_dns_at") @db.Timestamptz(3)
   lastDns         Json?         @map("last_dns")
+  /// Gmail API connection (OAuth refresh token, encrypted): sends over HTTPS instead of SMTP.
+  gmailRefreshTokenEnc String?  @map("gmail_refresh_token_enc")
+  gmailConnectedAt     DateTime? @map("gmail_connected_at") @db.Timestamptz(3)
+  /// Why the last Gmail send or check failed (cleared when it works again).
+  gmailError           String?  @map("gmail_error")
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   mails           MailLog[]

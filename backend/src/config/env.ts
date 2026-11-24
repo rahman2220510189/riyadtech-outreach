@@ -82,6 +82,13 @@ const envSchema = z
      * Render block SMTP ports).
      */
     MAIL_DELIVERY: z.enum(["direct", "outbox"]).default("direct"),
+    /**
+     * Google OAuth client (Google Cloud → APIs & Services → Credentials, type "Web application").
+     * Optional: with both set, a Gmail / Google Workspace mailbox can be connected and then sends
+     * over HTTPS (Gmail API), with no SMTP and no PC needed. The secret lives only in .env / Render.
+     */
+    GOOGLE_CLIENT_ID: z.string().trim().min(10).optional(),
+    GOOGLE_CLIENT_SECRET: z.string().trim().min(10).optional(),
     /** Set automatically by Render on hosted services. */
     RENDER: z.string().optional(),
   })

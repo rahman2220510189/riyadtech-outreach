@@ -1,12 +1,15 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
   type DnsResult,
   type Mailbox,
   type MailboxInput,
   type TestResult,
+  useConnectGmail,
   useDeleteMailbox,
+  useDisconnectGmail,
   useDnsCheck,
   useMailboxes,
   useSaveMailbox,
@@ -52,11 +55,14 @@ function DnsView({ dns }: { dns: DnsResult }) {
 function TestView({ t }: { t: TestResult }) {
   return (
     <ul className="space-y-1 text-sm">
-      {(["smtp", "imap"] as const).map((k) => (
-        <li key={k} className={t[k].ok ? "text-go" : "text-bad"}>
-          {t[k].ok ? "✓" : "✕"} {t[k].message}
-        </li>
-      ))}
+      {(["gmail", "smtp", "imap"] as const).map((k) => {
+        const r = t[k];
+        return r ? (
+          <li key={k} className={r.ok ? "text-go" : "text-bad"}>
+            {r.ok ? "✓" : "✕"} {r.message}
+          </li>
+        ) : null;
+      })}
     </ul>
   );
 }
@@ -197,7 +203,43 @@ function MailboxForm({ initial, onDone }: { initial?: Mailbox; onDone: () => voi
   );
 }
 
-function MailboxCard({ m, onEdit }: { m: Mailbox; onEdit: () => void }) {
+function GmailBox({ m, available, delivery }: { m: Mailbox; available: boolean; delivery: "direct" | "outbox" }) {
+  const connect = useConnectGmail();
+  const disconnect = useDisconnectGmail();
+  const btn = "rounded-lg border border-line px-3 py-2 text-sm font-medium hover:bg-paper disabled:opacity-50";
+  if (!/gmail\.com$/i.test(m.smtpHost) && !m.gmailConnected) return null;
+  return (
+    <div className="rounded-lg border border-line-soft bg-paper/50 px-4 py-3 text-sm">
+      <p className="font-medium">Gmail API (sends over HTTPS, no SMTP, no PC needed)</p>
+      {m.gmailConnected ? (
+        <p className={m.gmailError ? "text-bad" : "text-go"}>
+          {m.gmailError ? `✕ ${m.gmailError}` : `✓ Connected ${m.gmailConnectedAt?.slice(0, 10) ?? ""}: e-mails from ${m.fromEmail} go out through Gmail right away.`}
+        </p>
+      ) : (
+        <p className="text-ink-2">
+          {available
+            ? `Not connected. ${delivery === "outbox" ? "Until you connect it, e-mails wait for the outbox on your PC." : "Until you connect it, e-mails go through SMTP."}`
+            : "Not available yet: GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set on the server."}
+        </p>
+      )}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {available && (
+          <button type="button" className={btn} disabled={connect.isPending} onClick={() => connect.mutate(m.id)}>
+            {connect.isPending ? "Opening Google…" : m.gmailConnected ? "Connect again" : "Connect Gmail"}
+          </button>
+        )}
+        {m.gmailConnected && (
+          <button type="button" className={`${btn} text-bad`} disabled={disconnect.isPending} onClick={() => disconnect.mutate(m.id)}>
+            Disconnect
+          </button>
+        )}
+      </div>
+      {(connect.error ?? disconnect.error) && <p className="mt-1 text-bad">{(connect.error ?? disconnect.error)?.message}</p>}
+    </div>
+  );
+}
+
+function MailboxCard({ m, onEdit, gmailAvailable, delivery }: { m: Mailbox; onEdit: () => void; gmailAvailable: boolean; delivery: "direct" | "outbox" }) {
   const test = useTestMailbox();
   const dns = useDnsCheck();
   const del = useDeleteMailbox();
@@ -243,6 +285,7 @@ function MailboxCard({ m, onEdit }: { m: Mailbox; onEdit: () => void }) {
           )}
         </div>
       </div>
+      <GmailBox m={m} available={gmailAvailable} delivery={delivery} />
       {(test.error ?? dns.error) && <p className="text-sm text-bad">{(test.error ?? dns.error)?.message}</p>}
       {lastTest && (
         <div>
@@ -257,6 +300,8 @@ function MailboxCard({ m, onEdit }: { m: Mailbox; onEdit: () => void }) {
 
 export function MailboxesView() {
   const q = useMailboxes();
+  const params = useSearchParams();
+  const gmailResult = params.get("gmail");
   const [editing, setEditing] = useState<number | "new" | null>(null);
   const d = q.data;
   return (
@@ -286,6 +331,16 @@ export function MailboxesView() {
             : "Sending is off (SENDING_ENABLED=false): only tests to your own addresses are sent."}
         </p>
       )}
+      {gmailResult === "connected" && (
+        <p role="status" className="rounded-lg bg-go-soft px-4 py-3 text-sm text-go">
+          Gmail is connected for {params.get("mailbox")}. E-mails from it now go out through the Gmail API. Send a test to yourself to check.
+        </p>
+      )}
+      {gmailResult === "error" && (
+        <p role="alert" className="rounded-lg bg-bad-soft px-4 py-3 text-sm text-bad">
+          Gmail was not connected: {params.get("reason") ?? "unknown reason"}
+        </p>
+      )}
       {editing === "new" && <MailboxForm onDone={() => setEditing(null)} />}
       {q.isPending && <p className="text-ink-2">Loading…</p>}
       {q.isError && <p className="text-bad">{q.error.message}</p>}
@@ -296,7 +351,9 @@ export function MailboxesView() {
             <li key={m.id}>
               <MailboxForm initial={m} onDone={() => setEditing(null)} />
             </li>
-          ) : <MailboxCard key={m.id} m={m} onEdit={() => setEditing(m.id)} />,
+          ) : (
+            <MailboxCard key={m.id} m={m} onEdit={() => setEditing(m.id)} gmailAvailable={d.gmail.available} delivery={d.mailDelivery} />
+          ),
         )}
       </ul>
     </div>

@@ -26,7 +26,7 @@ import {
 
 export interface StudyRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED" | "GROQ_API_KEY" | "GROQ_MODEL" | "MAIL_DELIVERY">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED" | "GROQ_API_KEY" | "GROQ_MODEL" | "MAIL_DELIVERY" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "PUBLIC_BASE_URL">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });

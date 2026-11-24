@@ -1,8 +1,7 @@
-import type { Env } from "../config/env.js";
 import type { Db } from "../db/client.js";
 import type { Prisma } from "../generated/prisma/client.js";
-import { mailboxConfigs } from "../routes/mailboxes.js";
-import { mailErrorText, type OutgoingMail, sendMail } from "./transport.js";
+import { MailSendError, type SendEnv, transmit } from "./send.js";
+import type { OutgoingMail } from "./transport.js";
 
 /**
  * The outbox: on a host whose free plan blocks SMTP (Render), e-mails are not sent by the server
@@ -63,7 +62,7 @@ async function fail(db: Db, row: { id: bigint; mailLogId: bigint; refKind: strin
 }
 
 /** Sends what waits in the outbox (oldest first), at most `limit` per call. */
-export async function deliverOutbox(db: Db, env: Pick<Env, "ENCRYPTION_KEY">, opts: { limit?: number; now?: Date } = {}): Promise<DeliveryResult> {
+export async function deliverOutbox(db: Db, env: SendEnv, opts: { limit?: number; now?: Date } = {}): Promise<DeliveryResult> {
   const now = opts.now ?? new Date();
   const out: DeliveryResult = { sent: 0, failed: 0, interrupted: 0, lines: [] };
 
@@ -82,11 +81,9 @@ export async function deliverOutbox(db: Db, env: Pick<Env, "ENCRYPTION_KEY">, op
     const row = await db.mailOutbox.findUniqueOrThrow({ where: { id }, include: { mailbox: true } });
     const msg = row.message as unknown as Omit<OutgoingMail, "attachments">;
     try {
-      if (!row.mailbox.active) throw new Error(`The mailbox ${row.mailbox.fromEmail} is switched off`);
-      const { smtp } = mailboxConfigs(row.mailbox, env.ENCRYPTION_KEY);
+      if (!row.mailbox.active) throw new MailSendError(`The mailbox ${row.mailbox.fromEmail} is switched off`);
       const attachments = (row.attachments as unknown as StoredAttachment[]).map((a) => ({ filename: a.filename, contentType: a.contentType, content: Buffer.from(a.base64, "base64") }));
-      const r = await sendMail(smtp, { ...msg, attachments });
-      if (r.rejected.length > 0 && r.accepted.length === 0) throw Object.assign(new Error(`The server refused ${r.rejected.join(", ")}: ${r.response}`), { code: "EENVELOPE" });
+      const r = await transmit(db, env, row.mailbox, { ...msg, attachments });
       const response = r.response.slice(0, 500);
       await db.$transaction([
         db.mailOutbox.update({ where: { id }, data: { status: "sent", sentAt: new Date(), error: null, attachments: [] } }),
@@ -96,7 +93,7 @@ export async function deliverOutbox(db: Db, env: Pick<Env, "ENCRYPTION_KEY">, op
       out.sent++;
       out.lines.push(`sent    ${msg.subject} → ${msg.to}`);
     } catch (err) {
-      const error = err instanceof Error && /switched off/.test(err.message) ? err.message : mailErrorText(err, "SMTP");
+      const error = err instanceof Error ? err.message : String(err);
       await fail(db, row, error);
       out.failed++;
       out.lines.push(`FAILED  ${msg.subject} → ${msg.to}: ${error}`);
