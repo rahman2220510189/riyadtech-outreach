@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  useLetter,
   ENGLISH_LABELS,
   FIT_LEVEL_STYLE,
   FIT_LEVEL_TEXT,
@@ -57,6 +58,7 @@ export function ProgramDetail({ id }: { id: number }) {
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="space-y-5">
             <Facts p={p} onEdit={() => setEditing(true)} />
+            <Letter p={p} />
             <Website p={p} />
             <Emails p={p} />
           </div>
@@ -258,6 +260,30 @@ function Dates({ p }: { p: Program }) {
         </button>
         {add.error && <p className="text-sm text-bad">{add.error.message}</p>}
       </form>
+    </section>
+  );
+}
+
+function Letter({ p }: { p: Program }) {
+  const q = useLetter(p.id);
+  const l = q.data?.letter;
+  return (
+    <section className={card} aria-labelledby="letter-h">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 id="letter-h" className="font-semibold">
+            Motivation letter
+          </h2>
+          <p className="mt-1 text-sm text-ink-2">
+            {l
+              ? `${l.words} words${l.gaps.length ? ` · ${l.gaps.length} gap${l.gaps.length === 1 ? "" : "s"} to fill in` : " · ready to read through"} · saved ${l.updatedAt.slice(0, 10)}`
+              : "A statement of purpose for this programme: a first draft from your profile, then your edits."}
+          </p>
+        </div>
+        <Link href={`/study/programs/${p.id}/letter`} className="rounded-lg border border-line px-3 py-2 text-sm font-medium hover:bg-paper">
+          {l ? "Open the letter" : "Write the letter"}
+        </Link>
+      </div>
     </section>
   );
 }

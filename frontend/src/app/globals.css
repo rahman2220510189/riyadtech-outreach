@@ -65,3 +65,27 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printing a letter ("Print / Save as PDF"): only the .print-area is printed, on A4 with margins. */
+@media print {
+  @page {
+    size: A4;
+    margin: 22mm 20mm;
+  }
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    color: #000;
+  }
+}

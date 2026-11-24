@@ -660,7 +660,7 @@ model StudyProfile {
 /// A document for applications (certificate, transcript, CV …). Stored in the database (max 8 MB).
 model StudyDocument {
   id        BigInt   @id @default(autoincrement())
-  /// passport | photo | bsc_certificate | bsc_transcript | hsc_certificate | hsc_marksheet | ssc_certificate | ssc_marksheet | moi_letter | cv | motivation_letter | recommendation | ielts_result | other
+  /// passport | photo | bsc_certificate | bsc_completion_letter | bsc_transcript | hsc_certificate | hsc_marksheet | ssc_certificate | ssc_marksheet | moi_letter | cv | motivation_letter | recommendation | ielts_result | other
   kind      String
   label     String
   fileName  String   @map("file_name")
@@ -712,6 +712,7 @@ model StudyProgram {
   pages              StudyPage[]
   findings           StudyFinding[]
   directoryEntry     StudyUniversity?
+  letter             StudyLetter?
 
   @@index([status])
   @@map("study_programs")
@@ -835,4 +836,20 @@ model StudyFinding {
   @@unique([programId, type, value])
   @@index([status])
   @@map("study_findings")
+}
+
+/// One motivation letter / statement of purpose per programme (AI draft from my profile, edited by me).
+model StudyLetter {
+  id        BigInt       @id @default(autoincrement())
+  programId BigInt       @unique @map("program_id")
+  program   StudyProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  /// My own points for this programme (why it, my plans) that the AI may use.
+  notes     String?
+  aiModel   String?      @map("ai_model")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("study_letters")
 }

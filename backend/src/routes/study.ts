@@ -9,10 +9,12 @@ import { AppError, errors } from "../lib/errors.js";
 import { ownAddresses, sendLogged } from "../mail/send.js";
 import { resolveSettings } from "../settings/loader.js";
 import { type FitProfile, subjectFit, suggestedSubjects } from "../study/fit.js";
-import { aiConfigured, chat, draftEmail } from "../study/ai.js";
+import { aiConfigured, chat, draftEmail, draftLetter, letterGaps } from "../study/ai.js";
 import {
   DOC_KINDS,
   DOC_LABELS,
+  docLabel,
+  heldDocs,
   type DocKind,
   ENGLISH_REQUIREMENTS,
   englishFit,
@@ -75,7 +77,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
   app.addHook("preHandler", app.authenticate);
 
   const profile = async () => db.studyProfile.upsert({ where: { id: 1 }, create: { id: 1 }, update: {} });
-  const docKinds = async () => new Set((await db.studyDocument.findMany({ select: { kind: true } })).map((d) => d.kind as DocKind));
+  const docKinds = async () => heldDocs((await db.studyDocument.findMany({ select: { kind: true } })).map((d) => d.kind));
 
   /**
    * Is the application open now?
@@ -136,7 +138,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
       seedKey: p.seedKey,
       origin: p.origin,
       english: englishFit(p, prof),
-      docsNeeded: needed.map((k) => ({ kind: k, label: DOC_LABELS[k], have: have.has(k) })),
+      docsNeeded: needed.map((k) => ({ kind: k, label: docLabel(k, have), have: have.has(k) })),
       docsMissing: needed.filter((k) => !have.has(k)).length,
       window: applicationWindow(p.deadlines ?? [], foundDeadline),
       subjectFit: subjectFit(p, fitProfile(prof)),
@@ -261,7 +263,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
       applyUrl: url,
       infoUrl: url,
       contactEmail: z.email().max(200).nullable().optional(),
-      requiredDocs: z.array(z.enum(DOC_KINDS)).max(14),
+      requiredDocs: z.array(z.enum(DOC_KINDS)).max(20),
       howToApply: nullableText(3000),
       notes: nullableText(3000),
       status: z.enum(PROGRAM_STATUSES),
@@ -437,7 +439,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
       db.studyDocument.findMany({ select: { kind: true } }),
       db.studyProgram.findMany({ where: { status: { notIn: ["rejected", "not_now"] } }, include: { deadlines: true } }),
     ]);
-    const have = new Set(docs.map((d) => d.kind as DocKind));
+    const have = heldDocs(docs.map((d) => d.kind));
     const views = programs.map((p) => programView(p, prof, have));
     const steps: { id: string; text: string; link: string; urgent: boolean }[] = [];
     const missingProfile = [
@@ -561,6 +563,69 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
     };
   }
 
+  /* ---------------------------- Motivation letter (one per programme) ---------------------------- */
+
+  const letterView = (l: { id: bigint; programId: bigint; title: string; body: string; notes: string | null; aiModel: string | null; updatedAt: Date }) => ({
+    id: Number(l.id),
+    programId: Number(l.programId),
+    title: l.title,
+    body: l.body,
+    notes: l.notes,
+    aiModel: l.aiModel,
+    updatedAt: l.updatedAt.toISOString(),
+    words: l.body.trim() ? l.body.trim().split(/\s+/).length : 0,
+    gaps: letterGaps(l.body),
+  });
+
+  async function findProgram(id: number) {
+    const p = await db.studyProgram.findUnique({ where: { id: BigInt(id) } });
+    if (!p) throw errors.notFound("Programme not found");
+    return p;
+  }
+
+  app.get("/programs/:id/letter", async (request) => {
+    const p = await findProgram(idParam.parse(request.params).id);
+    const l = await db.studyLetter.findUnique({ where: { programId: p.id } });
+    return { letter: l ? letterView(l) : null, program: { id: Number(p.id), name: p.name, university: p.university, country: p.country }, ai: { configured: aiConfigured(env), model: env.GROQ_MODEL } };
+  });
+
+  /** A new AI draft from my profile, the programme and my notes. Replaces the text (the page asks first). */
+  app.post("/programs/:id/letter/draft", async (request) => {
+    const p = await findProgram(idParam.parse(request.params).id);
+    const b = z
+      .object({ notes: z.string().trim().max(3000).optional(), length: z.enum(["standard", "short"]).default("standard") })
+      .strict()
+      .parse(request.body ?? {});
+    const facts = aiFacts(await profile(), p, "application", []);
+    const d = await draftLetter(env, {
+      profile: facts.profile,
+      program: { ...facts.program, funding: p.funding, about: p.notes ? p.notes.slice(0, 800) : null },
+      notes: b.notes,
+      length: b.length,
+    });
+    const data = { title: d.title, body: d.body, notes: b.notes ?? null, aiModel: d.model };
+    const l = await db.studyLetter.upsert({ where: { programId: p.id }, update: data, create: { programId: p.id, ...data } });
+    return { letter: letterView(l) };
+  });
+
+  /** Saves my edits (or a letter written by hand). */
+  app.put("/programs/:id/letter", async (request) => {
+    const p = await findProgram(idParam.parse(request.params).id);
+    const b = z
+      .object({ title: z.string().trim().min(1).max(200), body: z.string().max(20000), notes: z.string().trim().max(3000).nullable().optional() })
+      .strict()
+      .parse(request.body);
+    const data = { title: b.title, body: b.body, ...(b.notes !== undefined ? { notes: b.notes } : {}) };
+    const l = await db.studyLetter.upsert({ where: { programId: p.id }, update: data, create: { programId: p.id, ...data } });
+    return { letter: letterView(l) };
+  });
+
+  app.delete("/programs/:id/letter", async (request, reply) => {
+    const p = await findProgram(idParam.parse(request.params).id);
+    await db.studyLetter.deleteMany({ where: { programId: p.id } });
+    void reply.status(204);
+  });
+
   app.get("/emails", async (request) => {
     const q = z.object({ programId: z.coerce.number().int().positive().optional(), status: z.enum(["draft", "sent", "failed"]).optional() }).parse(request.query);
     const rows = await db.studyEmail.findMany({
@@ -598,7 +663,10 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
         : prof.targetLevel === "bachelor"
           ? ["hsc_marksheet", "ssc_marksheet", "moi_letter"]
           : ["bsc_transcript", "moi_letter"];
-    const chosen = wanted.map((k) => docs.find((d) => d.kind === k)).filter((d): d is (typeof docs)[number] => !!d);
+    // Until the certificate arrives, the completion letter goes in its place.
+    const chosen = wanted
+      .map((k) => docs.find((d) => d.kind === k) ?? (k === "bsc_certificate" ? docs.find((d) => d.kind === "bsc_completion_letter") : undefined))
+      .filter((d): d is (typeof docs)[number] => !!d);
     const mailbox = b.mailboxId ? await db.mailbox.findUnique({ where: { id: BigInt(b.mailboxId) } }) : await db.mailbox.findFirst({ where: { active: true }, orderBy: { id: "desc" } });
     let subject = p ? `Question about ${p.name}` : "Question about admission";
     let body = `Dear Admissions Team,\n\n[[Write your e-mail here.]]\n\nKind regards,\n${prof.fullName || "[[Your name]]"}`;

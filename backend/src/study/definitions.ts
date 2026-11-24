@@ -4,6 +4,7 @@ export const DOC_KINDS = [
   "passport",
   "photo",
   "bsc_certificate",
+  "bsc_completion_letter",
   "bsc_transcript",
   "hsc_certificate",
   "hsc_marksheet",
@@ -22,6 +23,7 @@ export const DOC_LABELS: Record<DocKind, string> = {
   passport: "Passport",
   photo: "Passport photo",
   bsc_certificate: "BSc certificate",
+  bsc_completion_letter: "BSc completion letter (certificate coming)",
   bsc_transcript: "BSc transcript (marksheet)",
   hsc_certificate: "HSC certificate",
   hsc_marksheet: "HSC marksheet",
@@ -34,6 +36,22 @@ export const DOC_LABELS: Record<DocKind, string> = {
   ielts_result: "IELTS / English test result",
   other: "Other",
 };
+
+/**
+ * The papers I hold, as far as programmes are concerned: a completion letter from the university
+ * ("degree completed, certificate to follow") stands in for the BSc certificate until it arrives.
+ */
+export function heldDocs(kinds: Iterable<string>): Set<DocKind> {
+  const have = new Set([...kinds].filter((k): k is DocKind => (DOC_KINDS as readonly string[]).includes(k)));
+  if (have.has("bsc_completion_letter")) have.add("bsc_certificate");
+  return have;
+}
+
+/** A programme's paper as I hold it: the certificate shows that the completion letter covers it. */
+export function docLabel(kind: DocKind, held: Set<string>): string {
+  if (kind === "bsc_certificate" && held.has("bsc_completion_letter")) return "BSc certificate (or the completion letter until it arrives)";
+  return DOC_LABELS[kind];
+}
 
 export const LEVELS = ["bachelor", "master", "both"] as const;
 export type Level = (typeof LEVELS)[number];

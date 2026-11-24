@@ -10,6 +10,7 @@ export type DocKind =
   | "passport"
   | "photo"
   | "bsc_certificate"
+  | "bsc_completion_letter"
   | "bsc_transcript"
   | "hsc_certificate"
   | "hsc_marksheet"
@@ -554,5 +555,54 @@ export function usePasteText(programId: number) {
   return useMutation({
     mutationFn: async (body: { text: string; url?: string }) => (await api.post<{ added: number }>(`/study/programs/${programId}/paste`, body)).data,
     onSuccess: () => invalidateWatch(qc),
+  });
+}
+
+/* ---------------------------- Motivation letter (one per programme) ---------------------------- */
+
+export interface StudyLetter {
+  id: number;
+  programId: number;
+  title: string;
+  body: string;
+  notes: string | null;
+  aiModel: string | null;
+  updatedAt: string;
+  words: number;
+  gaps: string[];
+}
+
+export interface LetterPage {
+  letter: StudyLetter | null;
+  program: { id: number; name: string; university: string | null; country: string };
+  ai: { configured: boolean; model: string };
+}
+
+export function useLetter(programId: number) {
+  return useQuery({ queryKey: ["study-letter", programId], queryFn: async () => (await api.get<LetterPage>(`/study/programs/${programId}/letter`)).data });
+}
+
+export function useDraftLetter(programId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { notes?: string; length: "standard" | "short" }) =>
+      (await api.post<{ letter: StudyLetter }>(`/study/programs/${programId}/letter/draft`, body, { timeout: 150_000 })).data.letter,
+    onSuccess: (letter) => qc.setQueryData<LetterPage>(["study-letter", programId], (old) => (old ? { ...old, letter } : old)),
+  });
+}
+
+export function useSaveLetter(programId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { title: string; body: string; notes?: string | null }) => (await api.put<{ letter: StudyLetter }>(`/study/programs/${programId}/letter`, body)).data.letter,
+    onSuccess: (letter) => qc.setQueryData<LetterPage>(["study-letter", programId], (old) => (old ? { ...old, letter } : old)),
+  });
+}
+
+export function useDeleteLetter(programId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => (await api.delete(`/study/programs/${programId}/letter`)).data,
+    onSuccess: () => qc.setQueryData<LetterPage>(["study-letter", programId], (old) => (old ? { ...old, letter: null } : old)),
   });
 }

@@ -8,6 +8,7 @@ import { StudyNav } from "./StudyNav";
 const HINTS: Partial<Record<DocKind, string>> = {
   passport: "The page with your photo and details.",
   photo: "Recent passport-style photo (JPG or PNG).",
+  bsc_completion_letter: "Until the certificate arrives: a signed letter from the registrar that you completed the degree (with your CGPA) and when the certificate will be issued. It counts as the certificate.",
   bsc_transcript: "The marksheet with all courses and grades.",
   moi_letter: "From your university's registrar: “the medium of instruction was English”.",
   cv: "In English, one to two pages.",

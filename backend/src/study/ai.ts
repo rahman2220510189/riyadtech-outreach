@@ -144,3 +144,63 @@ export function parseDraft(raw: string): { subject: string; body: string } {
   if (!subject || body.length < 40) throw new AppError(502, "AI_FORMAT", "The AI answer could not be read as an e-mail; try again.");
   return { subject, body };
 }
+
+/* ------------------------------ Motivation letter / statement of purpose ------------------------------ */
+
+export interface LetterFacts {
+  profile: Record<string, string | number | boolean | null>;
+  program: Record<string, string | null>;
+  /** My own points for this programme: why it, what I want to do after. */
+  notes?: string | undefined;
+  /** standard: 500–700 words (most applications); short: 300–400 words (forms with a limit). */
+  length: "standard" | "short";
+}
+
+const LETTER_SYSTEM = `You help a student write a motivation letter (statement of purpose) for a master's or scholarship application.
+Rules:
+- Use ONLY the facts given (student facts, programme facts and the student's own notes). Never invent grades, awards, projects, publications, job titles, employers, dates, test scores, course names or professors.
+- Where the letter needs something that is not in the facts (for example a specific course or lab of the programme, or a career goal the student has not given), write a short gap marker [[…]] saying what the student should add. Use at most 5 markers.
+- Structure in plain paragraphs: (1) opening: the programme and why this field; (2) academic background; (3) research and projects; (4) work experience and skills; (5) why this programme, university and country — only reasons that follow from the facts or the notes; (6) goals after the degree; (7) short closing.
+- Concrete and modest, first person, British or American English consistently, no clichés ("since childhood", "passion" more than once), no flattery of the university, no markdown, no bullet points, no emojis.
+- Do not include addresses, date lines or "Dear …" greetings; the letter starts with its first paragraph and ends with the student's full name.
+Answer exactly in this format:
+TITLE: <Statement of Purpose – programme name>
+LETTER:
+<letter>`;
+
+export async function draftLetter(env: Pick<Env, "GROQ_API_KEY" | "GROQ_MODEL">, facts: LetterFacts): Promise<{ title: string; body: string; model: string }> {
+  const words = facts.length === "short" ? "300 to 400 words" : "500 to 700 words";
+  const user = [
+    `Length: ${words}.`,
+    `Student facts (JSON): ${JSON.stringify(facts.profile)}`,
+    `Programme facts (JSON): ${JSON.stringify(facts.program)}`,
+    facts.notes ? `The student's own notes for this programme (use them, in better words): ${facts.notes}` : "The student gave no notes for this programme.",
+  ].join("\n");
+  const raw = await chat(
+    env,
+    [
+      { role: "system", content: LETTER_SYSTEM },
+      { role: "user", content: user },
+    ],
+    { maxTokens: 4000, timeoutMs: 90_000 },
+  );
+  return { ...parseLetter(raw), model: env.GROQ_MODEL };
+}
+
+export function parseLetter(raw: string): { title: string; body: string } {
+  const text = raw.replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/\r\n/g, "\n").trim();
+  const m = /TITLE:\s*(.+)\n+LETTER:\s*\n?([\s\S]+)/i.exec(text);
+  const title = (m?.[1] ?? "").replace(/^["*#\s]+|["*\s]+$/g, "").slice(0, 200);
+  const body = (m?.[2] ?? "")
+    .replace(/\*\*/g, "")
+    .replace(/^#+\s*/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (!title || body.split(/\s+/).length < 120) throw new AppError(502, "AI_FORMAT", "The AI answer could not be read as a letter; try again.");
+  return { title, body };
+}
+
+/** The [[…]] places the student still has to fill in. */
+export function letterGaps(body: string): string[] {
+  return [...body.matchAll(/\[\[([^\]]{1,200})\]\]/g)].map((m) => m[1]!.trim());
+}

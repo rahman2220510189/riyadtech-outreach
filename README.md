@@ -35,7 +35,8 @@ There are three ways to see it:
 | **Subject fit** | Rule-based and explainable. It reads topics from my degree, work experience and research, then grades each programme as strong match, related, weak or any subject, with the reason and warnings (CGPA minimum, years of work experience). |
 | **"Applications open now"** | Built from confirmed and expected dates: open, probably open, or opening soon, each with a direct **Apply** link. |
 | **AI scholarship search** | Groq `gpt-oss-120b` with built-in browser search proposes official pages. The tool then opens each page itself and keeps only those that really name the scholarship. Aggregators and home pages are rejected. |
-| **Documents and e-mails** | A checklist of documents per programme, plus AI-drafted, editable follow-up e-mails sent from my own university mailbox with attachments. |
+| **Motivation letters** | One statement of purpose per programme. The AI writes a first draft from the profile and my own notes only, and anything it cannot know becomes a visible [[gap]] to fill in. I edit the draft, then print it or save it as a PDF. |
+| **Documents and e-mails** | A checklist of documents per programme (a completion letter counts as the degree certificate until the certificate arrives), plus AI-drafted, editable follow-up e-mails sent from my own university mailbox with attachments. |
 
 ### Client outreach
 

@@ -68,6 +68,10 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     setMailTestHooks({ send: (_c, m) => (sent.push(m), Promise.resolve({ messageId: m.messageId, response: "250 OK", accepted: [m.to], rejected: [] })) });
     setAiTestHook((_k, _model, messages) => {
       prompts.push(messages);
+      if (messages[0]!.content.includes("motivation letter")) {
+        const para = "I want to deepen my knowledge of natural language processing and build reliable systems for languages with few resources. ";
+        return Promise.resolve(`TITLE: Statement of Purpose – ZZ letter programme\nLETTER:\n**${para.repeat(6)}**\n\n\n\n${para.repeat(6)} After the degree I plan to [[your career goal]].\n\nRiyad Hasan`);
+      }
       return Promise.resolve(
         "SUBJECT: Question about MOI and scholarships for MSc\nBODY:\nDear Admissions Team,\n\nI completed a BSc in Computer Science, taught in English, with a CGPA of 3.15 out of 4. Could you tell me whether you accept a Medium of Instruction letter instead of IELTS, and whether scholarships are available for the next intake?\n\nKind regards,\nRiyad Hasan",
       );
@@ -189,6 +193,43 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     expect(r.json<{ error: { code: string } }>().error.code).toBe("AI_NOT_SET");
     await noKey.close();
   });
+  it("motivation letter: AI draft from my facts and notes, gaps listed, edits saved, completion letter counts as the certificate", async () => {
+    const p = (await send("POST", "/api/v1/study/programs", { name: "ZZ letter programme", kind: "programme", country: "Austria", level: "master", englishRequirement: "moi_ok", requiredDocs: [] })).json<{ id: number }>();
+    expect((await get(`/api/v1/study/programs/${p.id}/letter`)).json()).toMatchObject({ letter: null, ai: { configured: true } });
+
+    const d = await send("POST", `/api/v1/study/programs/${p.id}/letter/draft`, { notes: "I like the NLP group here.", length: "short" });
+    expect(d.statusCode).toBe(200);
+    const l = d.json<{ letter: { title: string; body: string; words: number; gaps: string[]; notes: string } }>().letter;
+    expect(l.title).toBe("Statement of Purpose – ZZ letter programme");
+    expect(l.body).not.toContain("**");
+    expect(l.body).not.toMatch(/\n{3}/);
+    expect(l.gaps).toEqual(["your career goal"]);
+    expect(l.words).toBeGreaterThan(120);
+    expect(l.notes).toBe("I like the NLP group here.");
+    const prompt = prompts.at(-1)!;
+    expect(prompt[0]!.content).toMatch(/Never invent/);
+    expect(prompt[1]!.content).toContain("300 to 400 words");
+    expect(prompt[1]!.content).toContain("I like the NLP group here.");
+    expect(prompt[1]!.content).toContain('"name":"ZZ letter programme"');
+
+    const saved = await send("PUT", `/api/v1/study/programs/${p.id}/letter`, { title: "My SOP", body: "Short text written by me." });
+    expect(saved.json()).toMatchObject({ letter: { title: "My SOP", words: 5, gaps: [], notes: "I like the NLP group here." } });
+    expect((await send("PUT", `/api/v1/study/programs/${p.id}/letter`, { title: "", body: "x" })).statusCode).toBe(400);
+    expect((await send("DELETE", `/api/v1/study/programs/${p.id}/letter`)).statusCode).toBe(204);
+    expect((await get(`/api/v1/study/programs/${p.id}/letter`)).json()).toMatchObject({ letter: null });
+    expect((await get("/api/v1/study/programs/999999999/letter")).statusCode).toBe(404);
+
+    // Before the certificate arrives, the completion letter covers it.
+    const before = (await get(`/api/v1/study/programs/${p.id}`)).json<{ docsNeeded: { kind: string; have: boolean }[] }>();
+    const hadCertificate = before.docsNeeded.find((x) => x.kind === "bsc_certificate")!.have;
+    const up = await send("POST", "/api/v1/study/documents", { kind: "bsc_completion_letter", label: "ZZ completion letter", fileName: "completion.pdf", dataBase64: Buffer.from("%PDF-1.4 completion letter").toString("base64") });
+    expect(up.statusCode).toBe(201);
+    const after = (await get(`/api/v1/study/programs/${p.id}`)).json<{ docsNeeded: { kind: string; have: boolean; label: string }[] }>();
+    const cert = after.docsNeeded.find((x) => x.kind === "bsc_certificate")!;
+    expect(cert.have).toBe(true);
+    if (!hadCertificate) expect(cert.label).toMatch(/completion letter/);
+  });
+
   it("application window: open, probably open, opens soon; the open filter and the overview list", async () => {
     const day = (n: number) => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + n));
     const mk = (name: string, deadlines: { kind: string; dueOn: Date }[]) =>
