@@ -32,7 +32,8 @@
     "crawl": "tsx src/cli/crawl.ts",
     "jobs:check": "tsx src/cli/jobs-check.ts",
     "study:check": "tsx src/cli/study-check.ts",
-    "study:ai": "tsx src/cli/study-ai.ts"
+    "study:ai": "tsx src/cli/study-ai.ts",
+    "seed:demo": "tsx src/cli/seed-demo.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",

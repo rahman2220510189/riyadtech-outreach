@@ -37,6 +37,7 @@ Then open http://127.0.0.1:4000/health
 | `npm run db:migrate` | Apply migrations (`prisma migrate deploy`, uses `DIRECT_URL`) |
 | `npm run db:status` | Show which migrations are applied |
 | `npm run seed:admin` | Create the admin (`ADMIN_EMAIL`) or set a new password (logs out all sessions) |
+| `npm run seed:demo` | Local demo data: a made-up student, three example programmes and website findings (refuses in production or when a real profile exists) |
 | `npm run geonames:import -- [GB IE US AU] [--dir folder]` | Load GeoNames regions and cities (also a button on the Finder page) |
 | `npm run finder -- --country GB --city Manchester [--dry-run] [--verbose]` | Run a finder job in the terminal, printing each step (and with --verbose each download) |
 | `npm run db:check` | Check URLs, connection, migrations, tables, a test write, retry + lock |
