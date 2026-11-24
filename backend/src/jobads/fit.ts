@@ -68,7 +68,7 @@ export function techIn(text: string): string[] {
   return TECH.filter((t) => t.re.test(text)).map((t) => t.name);
 }
 
-export type Seniority = "student" | "junior" | "senior" | "open";
+export type Seniority = "student" | "junior" | "experienced" | "senior" | "open";
 
 const SENIOR = /\b(senior|sr\.?|lead|leading|principal|staff|head of|architect|architekt(?:in)?|teamlead|team lead|tech lead|leiter(?:in)?|leitung|director|manager|expert(?:e|in)?|cto)\b/i;
 const STUDENT = /\b(werkstudent(?:in)?|working student|praktikum|praktikant(?:in)?|pflichtpraktikum|intern|internship|ausbildung|auszubildende|azubi|duales? studium|dual(?:es)? student|abschlussarbeit|masterarbeit|bachelorarbeit|thesis|minijob|aushilfe)\b/i;
@@ -76,12 +76,31 @@ const JUNIOR = /\b(junior|jr\.?|entry[- ]level|graduate|berufseinsteiger(?:in)?|
 /** Junior-friendly words in the text even when the title says nothing. */
 const JUNIOR_TEXT = /\b(berufseinsteiger(?:innen)?|erste berufserfahrung|first (?:professional|work) experience|entry[- ]level|recent graduates?|junior|career starters?|no experience required|keine berufserfahrung)\b/i;
 
-export function seniorityOf(title: string, text: string): Seniority {
-  if (STUDENT.test(title)) return "student";
+/** Level words job boards put in their own fields (Arbeitnow "job types"). */
+const TYPE_SENIOR = /\b(senior|lead|principal|executive|director)\b/i;
+const TYPE_EXPERIENCED = /\b(experienced|mid[- ]?level|professional|berufserfahren|erfahren)\b/i;
+const TYPE_JUNIOR = /\b(entry[- ]?level|junior|graduate|berufseinsteiger|young professional)\b/i;
+const TYPE_STUDENT = /\b(student|werkstudent|internship|praktikum|ausbildung|apprenticeship)\b/i;
+
+export function seniorityOf(title: string, text: string, jobTypes: string[] = []): Seniority {
+  const types = jobTypes.join(", ");
+  if (STUDENT.test(title) || TYPE_STUDENT.test(types)) return "student";
   if (JUNIOR.test(title)) return "junior";
   if (SENIOR.test(title)) return "senior";
+  if (TYPE_JUNIOR.test(types)) return "junior";
+  if (TYPE_SENIOR.test(types)) return "senior";
+  if (TYPE_EXPERIENCED.test(types)) return "experienced";
   if (JUNIOR_TEXT.test(text)) return "junior";
   return "open";
+}
+
+/** "Candidates must live in the UK", "no visa sponsorship", "valid work permit required". */
+export function residenceRule(text: string): string | null {
+  const live = /\b(?:[Cc]andidates|[Aa]pplicants|[Yy]ou) (?:must|need to|should) (?:already )?(?:live|reside|be based|be located)(?: in)? ((?:the )?[A-Z][\w .,'/-]{2,60}?)(?=[.;\n(]|$)/.exec(text);
+  if (live) return `Must already live in ${live[1]!.trim()}.`;
+  if (/\b(?:no|not able to (?:offer|provide)|cannot (?:offer|provide)|unable to (?:offer|provide)|do not (?:offer|provide)) (?:visa )?sponsorship\b|\bwithout (?:visa )?sponsorship\b|\bkeine (?:visa|arbeitserlaubnis)/i.test(text)) return "No visa sponsorship.";
+  if (/\b(?:valid|existing|current) (?:eu |uk |german )?(?:work permit|right to work|work authori[sz]ation|arbeitserlaubnis)\b[^.\n]{0,30}(?:required|needed|necessary|erforderlich|vorausgesetzt)|\bmust (?:have|hold) (?:the )?(?:right to work|a (?:valid )?work permit)/i.test(text)) return "Needs a work permit already.";
+  return null;
 }
 
 const NUM: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, ten: 10, ein: 1, einem: 1, zwei: 2, drei: 3, vier: 4, fünf: 5, fuenf: 5, sechs: 6, sieben: 7, acht: 8, zehn: 10, mehrjährige: 3, mehrjaehrige: 3, several: 3, mehreren: 3 };
@@ -138,9 +157,9 @@ export interface JobFit {
 
 const GERMAN_RANK: Record<GermanLevel, number> = { none: 0, a1: 1, a2: 2, b1: 3, b2: 4, c1: 5, c2: 6 };
 
-export function jobFit(ad: { title: string; description: string | null; tags: string[]; flags: string[] }, me: JobProfile): JobFit {
+export function jobFit(ad: { title: string; description: string | null; tags: string[]; flags: string[]; jobTypes?: string[] }, me: JobProfile): JobFit {
   const text = `${ad.title}\n${ad.tags.join(", ")}\n${ad.description ?? ""}`;
-  const seniority = seniorityOf(ad.title, ad.description ?? "");
+  const seniority = seniorityOf(ad.title, ad.description ?? "", ad.jobTypes ?? []);
   const years = minYears(text);
   const german = germanNeeded(text, ad.flags);
   const mine = new Set(me.skills.map((s) => s.toLowerCase()));
@@ -159,6 +178,9 @@ export function jobFit(ad: { title: string; description: string | null; tags: st
   } else if (seniority === "senior") {
     score -= 4;
     warnings.push("Senior or lead role.");
+  } else if (seniority === "experienced") {
+    score -= 2;
+    warnings.push("The job board lists it for experienced developers.");
   } else if (seniority === "student") {
     score -= 4;
     warnings.push("Student job, internship or apprenticeship (usually needs enrolment in Germany or German).");
@@ -196,9 +218,17 @@ export function jobFit(ad: { title: string; description: string | null; tags: st
     }
   }
 
+  const rule = residenceRule(text);
+  if (rule && !(rule === "No visa sponsorship." && ad.flags.includes("visa"))) {
+    score -= 3;
+    warnings.push(rule);
+  }
+
   let level: JobFit["level"] = score >= 5 ? "good" : score >= 2 ? "possible" : "unlikely";
+  // One or two familiar words are not enough for a "good" match.
+  if (level === "good" && matched.length < 3) level = "possible";
   // A hard requirement I do not meet keeps it from being a "good" match, however well the skills fit.
   if (level === "good" && warnings.length > 0) level = "possible";
-  if (seniority === "senior" || seniority === "student") level = level === "good" ? "possible" : level;
+  if (seniority === "senior" || seniority === "student" || seniority === "experienced") level = level === "good" ? "possible" : level;
   return { level, score, seniority, years, german, matched, missing, reasons, warnings };
 }

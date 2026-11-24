@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { germanNeeded, jobFit, type JobProfile, minYears, seniorityOf, techIn } from "../src/jobads/fit.js";
+import { germanNeeded, jobFit, type JobProfile, minYears, residenceRule, seniorityOf, techIn } from "../src/jobads/fit.js";
 
 const me: JobProfile = { skills: ["JavaScript", "TypeScript", "React", "Next.js", "Node.js", "PostgreSQL", "REST APIs", "Git"], yearsExperience: 1, germanLevel: "a1" };
 
@@ -69,5 +69,32 @@ describe("job fit against my profile", () => {
     expect(jobFit(ad, me).warnings.join(" ")).toMatch(/German/);
     expect(jobFit(ad, me).level).not.toBe("good"); // a requirement I do not meet: never a "good" match
     expect(jobFit(ad, { ...me, germanLevel: "b2" }).warnings.join(" ")).not.toMatch(/German/);
+  });
+
+  it("uses the job board's own level field (Arbeitnow job types)", () => {
+    expect(seniorityOf("Machine Learning Engineer", "", ["Experienced", "Permanent"])).toBe("experienced");
+    expect(seniorityOf("Software Engineer", "", ["Mid-Level"])).toBe("experienced");
+    expect(seniorityOf("Software Engineer", "", ["Senior"])).toBe("senior");
+    expect(seniorityOf("Developer", "", ["Entry Level", "Full Time"])).toBe("junior");
+    expect(seniorityOf("Developer", "", ["Internship"])).toBe("student");
+    const f = jobFit({ title: "Machine Learning Engineer", description: "Python, Docker, Linux and machine learning in English.", tags: [], flags: ["ad_english"], jobTypes: ["Experienced"] }, { ...me, skills: [...me.skills, "Python", "Docker", "Linux", "Machine learning"] });
+    expect(f.level).not.toBe("good");
+    expect(f.warnings.join(" ")).toMatch(/experienced/);
+  });
+
+  it("one familiar word is not a good match", () => {
+    const f = jobFit({ title: "FullStack Engineer", description: "You have a knack for solving problems with JavaScript.", tags: [], flags: ["ad_english"] }, me);
+    expect(f.matched).toEqual(["JavaScript"]);
+    expect(f.level).toBe("possible");
+  });
+
+  it("where I must already live, or no visa sponsorship", () => {
+    expect(residenceRule("Candidates must live in the United Kingdom. Full-time.")).toBe("Must already live in the United Kingdom.");
+    expect(residenceRule("We are unable to offer visa sponsorship for this role.")).toBe("No visa sponsorship.");
+    expect(residenceRule("A valid EU work permit is required.")).toBe("Needs a work permit already.");
+    expect(residenceRule("We help with relocation and visas.")).toBeNull();
+    const f = jobFit({ title: "Junior React Developer", description: "React, Next.js, Node.js, TypeScript. Candidates must live in Germany.", tags: [], flags: ["ad_english"] }, me);
+    expect(f.level).not.toBe("good");
+    expect(f.warnings).toContain("Must already live in Germany.");
   });
 });

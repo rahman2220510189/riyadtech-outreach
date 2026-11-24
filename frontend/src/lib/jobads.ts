@@ -44,7 +44,7 @@ export interface JobProfile {
 export interface JobFit {
   level: "good" | "possible" | "unlikely";
   score: number;
-  seniority: "student" | "junior" | "senior" | "open";
+  seniority: "student" | "junior" | "experienced" | "senior" | "open";
   years: number | null;
   german: "fluent" | "good" | "some" | "none";
   matched: string[];

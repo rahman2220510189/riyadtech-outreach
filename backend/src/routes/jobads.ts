@@ -90,7 +90,7 @@ export const jobAdsRoutes: FastifyPluginCallback<JobAdsRoutesOptions> = (app, { 
     if (q.level === "entry" || q.fit || q.sort === "fit") {
       // Level and match are worked out from the advert text, so the filtered set is scored here
       // (a few thousand adverts at most), then only the page is loaded in full.
-      const light = await db.jobAd.findMany({ where: w, select: { id: true, title: true, company: true, description: true, tags: true, flags: true, postedAt: true }, take: 10_000 });
+      const light = await db.jobAd.findMany({ where: w, select: { id: true, title: true, company: true, description: true, tags: true, jobTypes: true, flags: true, postedAt: true }, take: 10_000 });
       let scored = light.map((a) => ({ a, fit: jobFit(a, me) }));
       if (q.level === "entry") scored = scored.filter((x) => x.fit.seniority === "junior" || x.fit.seniority === "open");
       if (q.fit) scored = scored.filter((x) => (q.fit === "good" ? x.fit.level === "good" : x.fit.level !== "unlikely"));
