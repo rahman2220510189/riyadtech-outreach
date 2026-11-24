@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { letterGaps, parseLetter } from "../src/study/ai.js";
+import { letterChecks, letterGaps, parseLetter } from "../src/study/ai.js";
 import { docLabel, heldDocs, requiredDocsFor } from "../src/study/definitions.js";
 
 const para = "My bachelor's research looked at fake news detection with transformer models and classic machine learning. ";
@@ -20,6 +20,24 @@ describe("motivation letter parsing", () => {
   it("lists the [[…]] places to fill in", () => {
     expect(letterGaps("I want to join [[name of the research group]] and later [[your career goal]].")).toEqual(["name of the research group", "your career goal"]);
     expect(letterGaps("Nothing to add.")).toEqual([]);
+  });
+});
+
+describe("letter checks", () => {
+  const facts = '{"bscCgpa":"3.16 out of 4","about":"benchmarked 11 models from 60,000+ articles; best 92.0% macro F1; p = 0.68"}';
+
+  it("flags numbers that are not in my facts, but not years or numbers that are", () => {
+    const c = letterChecks("CGPA 3.16, eleven models, 92.0% macro-F1, p = 0.68, 60,000 articles, finished in 2026. My HSC GPA was 4.83.", facts);
+    expect(c.join(" ")).toMatch(/Numbers not found in your profile: 4\.83\./);
+    expect(c.join(" ")).not.toMatch(/3\.16|92\.0|2026|60000|60,000/);
+  });
+
+  it("flags boastful words, order words and length", () => {
+    const c = letterChecks(`A remarkable result with state-of-the-art models. Earlier, I founded a studio. ${"word ".repeat(700)}`, facts);
+    expect(c.join(" ")).toMatch(/remarkable, state-of-the-art/);
+    expect(c.join(" ")).toMatch(/earlier/);
+    expect(c.join(" ")).toMatch(/longer than 650/);
+    expect(letterChecks("A short, plain letter about my thesis.", facts)).toEqual([]);
   });
 });
 

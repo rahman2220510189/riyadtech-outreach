@@ -880,6 +880,10 @@ model StudyLetter {
   body      String
   /// My own points for this programme (why it, my plans) that the AI may use.
   notes     String?
+  /// For a scholarship: the university programme I apply to through it.
+  target    String?
+  /// standard (500–650 words) | short (300–400)
+  length    String       @default("standard")
   aiModel   String?      @map("ai_model")
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)

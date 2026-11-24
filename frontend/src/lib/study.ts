@@ -568,14 +568,19 @@ export interface StudyLetter {
   title: string;
   body: string;
   notes: string | null;
+  target: string | null;
+  length: "standard" | "short";
   aiModel: string | null;
   updatedAt: string;
   words: number;
   gaps: string[];
+  /** Lines to check by hand: numbers not in my profile, boastful words, length, order words. */
+  checks: string[];
 }
 
 export interface LetterPage {
   letter: StudyLetter | null;
+  isScholarship: boolean;
   program: { id: number; name: string; university: string | null; country: string };
   ai: { configured: boolean; model: string };
 }
@@ -587,7 +592,7 @@ export function useLetter(programId: number) {
 export function useDraftLetter(programId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { notes?: string; length: "standard" | "short" }) =>
+    mutationFn: async (body: { notes?: string; target?: string; length: "standard" | "short" }) =>
       (await api.post<{ letter: StudyLetter }>(`/study/programs/${programId}/letter/draft`, body, { timeout: 150_000 })).data.letter,
     onSuccess: (letter) => qc.setQueryData<LetterPage>(["study-letter", programId], (old) => (old ? { ...old, letter } : old)),
   });
@@ -596,7 +601,7 @@ export function useDraftLetter(programId: number) {
 export function useSaveLetter(programId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { title: string; body: string; notes?: string | null }) => (await api.put<{ letter: StudyLetter }>(`/study/programs/${programId}/letter`, body)).data.letter,
+    mutationFn: async (body: { title: string; body: string; notes?: string | null; target?: string | null }) => (await api.put<{ letter: StudyLetter }>(`/study/programs/${programId}/letter`, body)).data.letter,
     onSuccess: (letter) => qc.setQueryData<LetterPage>(["study-letter", programId], (old) => (old ? { ...old, letter } : old)),
   });
 }

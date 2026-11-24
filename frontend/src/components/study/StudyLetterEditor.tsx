@@ -36,14 +36,15 @@ function Editor({ page, programId }: { page: LetterPage; programId: number }) {
   const [title, setTitle] = useState(l?.title ?? `Statement of Purpose – ${page.program.name}`);
   const [body, setBody] = useState(l?.body ?? "");
   const [notes, setNotes] = useState(l?.notes ?? "");
-  const [length, setLength] = useState<"standard" | "short">("standard");
-  const dirty = title !== (l?.title ?? `Statement of Purpose – ${page.program.name}`) || body !== (l?.body ?? "");
+  const [target, setTarget] = useState(l?.target ?? "");
+  const [length, setLength] = useState<"standard" | "short">(l?.length ?? "standard");
+  const dirty = title !== (l?.title ?? `Statement of Purpose – ${page.program.name}`) || body !== (l?.body ?? "") || target.trim() !== (l?.target ?? "");
   const gaps = gapsIn(body);
   const thinProfile = profile.data && !profile.data.workExperience && !profile.data.aboutMe;
 
   const write = () => {
     if (body.trim() && !window.confirm("The AI writes a new letter and replaces the text above. Continue?")) return;
-    draft.mutate({ length, ...(notes.trim() ? { notes: notes.trim() } : {}) });
+    draft.mutate({ length, ...(notes.trim() ? { notes: notes.trim() } : {}), ...(target.trim() ? { target: target.trim() } : {}) });
   };
 
   return (
@@ -71,7 +72,7 @@ function Editor({ page, programId }: { page: LetterPage; programId: number }) {
             />
           </label>
           <p className="text-sm text-ink-2">
-            {words(body)} words{length === "short" ? " · short version: 300–400" : " · most applications: 500–700"}
+            {words(body)} words{length === "short" ? " · short version: 300–400" : " · aim for 500–650"}
           </p>
           {gaps.length > 0 && (
             <div className="rounded-lg border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
@@ -83,10 +84,20 @@ function Editor({ page, programId }: { page: LetterPage; programId: number }) {
               </ul>
             </div>
           )}
+          {l && !dirty && l.checks.length > 0 && (
+            <div className="rounded-lg border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
+              <p className="font-medium">Check these before you submit:</p>
+              <ul className="mt-1 list-disc pl-5">
+                {l.checks.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
-              onClick={() => save.mutate({ title: title.trim() || page.program.name, body, notes: notes.trim() || null })}
+              onClick={() => save.mutate({ title: title.trim() || page.program.name, body, notes: notes.trim() || null, target: target.trim() || null })}
               disabled={save.isPending || (!dirty && !!l) || !body.trim()}
               className="rounded-lg bg-ink px-4 py-2.5 text-sm font-medium text-white hover:bg-ink/90 disabled:opacity-50"
             >
@@ -134,6 +145,19 @@ function Editor({ page, programId }: { page: LetterPage; programId: number }) {
             </p>
           )}
           <label className="mt-3 flex flex-col gap-1 text-sm">
+            <span className="font-medium">{page.isScholarship ? "Programme and university you apply to" : "Programme and university (if different)"}</span>
+            <input
+              value={target}
+              onChange={(x) => setTarget(x.target.value)}
+              maxLength={300}
+              placeholder="MSc Computer Science, University of …"
+              className={field}
+            />
+            {page.isScholarship && !target.trim() && (
+              <span className="text-xs text-warn">A scholarship is not a programme: name the programme you apply to through it, or the letter leaves a gap for it.</span>
+            )}
+          </label>
+          <label className="mt-3 flex flex-col gap-1 text-sm">
             <span className="font-medium">Your points for this programme</span>
             <textarea
               rows={6}
@@ -147,7 +171,7 @@ function Editor({ page, programId }: { page: LetterPage; programId: number }) {
           <fieldset className="mt-3 text-sm">
             <legend className="font-medium">Length</legend>
             <label className="mt-1 flex items-center gap-2">
-              <input type="radio" name="len" checked={length === "standard"} onChange={() => setLength("standard")} /> Standard (500–700 words)
+              <input type="radio" name="len" checked={length === "standard"} onChange={() => setLength("standard")} /> Standard (500–650 words)
             </label>
             <label className="mt-1 flex items-center gap-2">
               <input type="radio" name="len" checked={length === "short"} onChange={() => setLength("short")} /> Short (300–400 words, for forms with a limit)

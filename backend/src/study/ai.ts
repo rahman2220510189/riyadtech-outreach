@@ -10,7 +10,7 @@ import { AppError } from "../lib/errors.js";
 export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export interface ChatMessage {
-  role: "system" | "user";
+  role: "system" | "user" | "assistant";
   content: string;
 }
 /** Extra request options: Groq's built-in browser search (gpt-oss models) for the scholarship search. */
@@ -152,39 +152,87 @@ export interface LetterFacts {
   program: Record<string, string | null>;
   /** My own points for this programme: why it, what I want to do after. */
   notes?: string | undefined;
-  /** standard: 500–700 words (most applications); short: 300–400 words (forms with a limit). */
+  /** For a scholarship: the university programme I apply to through it ("MSc Computer Science, University of Szeged"). */
+  target?: string | undefined;
+  /** standard: 500–650 words (most applications); short: 300–400 words (forms with a limit). */
   length: "standard" | "short";
 }
 
+export const LETTER_WORDS = { standard: { min: 500, max: 650 }, short: { min: 300, max: 400 } } as const;
+
 const LETTER_SYSTEM = `You help a student write a motivation letter (statement of purpose) for a master's or scholarship application.
-Rules:
-- Use ONLY the facts given (student facts, programme facts and the student's own notes). Never invent grades, awards, projects, publications, job titles, employers, dates, test scores, course names or professors.
-- Where the letter needs something that is not in the facts (for example a specific course or lab of the programme, or a career goal the student has not given), write a short gap marker [[…]] saying what the student should add. Use at most 5 markers.
-- Structure in plain paragraphs: (1) opening: the programme and why this field; (2) academic background; (3) research and projects; (4) work experience and skills; (5) why this programme, university and country — only reasons that follow from the facts or the notes; (6) goals after the degree; (7) short closing.
-- Concrete and modest, first person, British or American English consistently, no clichés ("since childhood", "passion" more than once), no flattery of the university, no markdown, no bullet points, no emojis.
-- Do not include addresses, date lines or "Dear …" greetings; the letter starts with its first paragraph and ends with the student's full name.
+Facts:
+- Use ONLY the facts given (student facts, programme facts, target programme and the student's own notes). Never invent grades, awards, projects, publications, job titles, employers, dates, numbers, test scores, professors, courses, coursework subjects, modules, labs or research groups. Do not describe what the student studied in class unless the facts say so.
+- Where the letter needs something that is not in the facts (a specific course, lab or research group of the programme, or a goal the student has not given), write a short gap marker [[…]] saying what the student should add. Use at most 4 markers.
+- A scholarship is not a study programme. If the programme facts are a scholarship, write that the student applies to the target programme through the scholarship; if no target programme is given, write [[programme name]] at [[university]].
+- Keep events in the order their dates show. Do not write "earlier", "previously" or "later" about two activities unless their dates prove it.
+Content:
+- Structure in plain paragraphs: (1) opening: the programme and the field; (2) academic background, short; (3) research, the longest part: what was done, what was learned; (4) work experience in two or three sentences, focused on what it taught; leave out business figures such as budgets, prices, customer or city counts; (5) why this programme, university and country, only reasons from the facts or the notes; (6) goals after the degree, realistic for a fresh graduate (a PhD or a research-oriented role, not a "senior" role); (7) one-sentence closing.
+- Concrete and modest, first person, consistent British English. No clichés and no praise words such as "remarkable", "passionate", "cutting-edge", "state-of-the-art", "world-class", "unique opportunity". Never belittle the student's home country or university. No flattery of the host university. No markdown, no bullet points, no emojis.
+- Do not include addresses, date lines or "Dear …" greetings; the letter starts with its first paragraph and ends with the student's full name exactly as given.
 Answer exactly in this format:
-TITLE: <Statement of Purpose – programme name>
+TITLE: <Statement of Purpose – target programme or programme name>
 LETTER:
 <letter>`;
 
+const wordCount = (t: string) => (t.trim() ? t.trim().split(/\s+/).length : 0);
+
 export async function draftLetter(env: Pick<Env, "GROQ_API_KEY" | "GROQ_MODEL">, facts: LetterFacts): Promise<{ title: string; body: string; model: string }> {
-  const words = facts.length === "short" ? "300 to 400 words" : "500 to 700 words";
+  const { min, max } = LETTER_WORDS[facts.length];
   const user = [
-    `Length: ${words}.`,
+    `Length: ${min} to ${max} words. Never more than ${max}.`,
     `Student facts (JSON): ${JSON.stringify(facts.profile)}`,
     `Programme facts (JSON): ${JSON.stringify(facts.program)}`,
+    facts.target ? `Target programme (the student applies to this): ${facts.target}` : "No target programme given.",
     facts.notes ? `The student's own notes for this programme (use them, in better words): ${facts.notes}` : "The student gave no notes for this programme.",
   ].join("\n");
-  const raw = await chat(
-    env,
-    [
-      { role: "system", content: LETTER_SYSTEM },
-      { role: "user", content: user },
-    ],
-    { maxTokens: 4000, timeoutMs: 90_000 },
-  );
-  return { ...parseLetter(raw), model: env.GROQ_MODEL };
+  const messages = [
+    { role: "system" as const, content: LETTER_SYSTEM },
+    { role: "user" as const, content: user },
+  ];
+  let letter = parseLetter(await chat(env, messages, { maxTokens: 4000, timeoutMs: 90_000 }));
+  // Too long: one more pass that only shortens (same facts, nothing new).
+  if (wordCount(letter.body) > max + 30) {
+    const shorter = await chat(
+      env,
+      [
+        ...messages,
+        { role: "assistant" as const, content: `TITLE: ${letter.title}\nLETTER:\n${letter.body}` },
+        { role: "user" as const, content: `This has ${wordCount(letter.body)} words. Shorten it to at most ${max} words: keep every fact and every [[…]] marker exactly, cut repetition and the work details first, add nothing new. Same answer format.` },
+      ],
+      { maxTokens: 4000, timeoutMs: 90_000 },
+    ).catch(() => null);
+    if (shorter) {
+      try {
+        letter = parseLetter(shorter);
+      } catch {
+        /* keep the first version */
+      }
+    }
+  }
+  return { ...letter, model: env.GROQ_MODEL };
+}
+
+/** Words that make a letter sound generated or boastful. */
+const STYLE_WORDS = /\b(remarkabl[ey]|passionate|passion|cutting[- ]edge|state[- ]of[- ]the[- ]art|world[- ]class|unique opportunity|esteemed|prestigious|unavailable in bangladesh|senior research role)\b/gi;
+
+/**
+ * Things to check by hand: numbers that are not in my facts (the AI may have invented them),
+ * style words, length, and order words. Plain-words warnings for the letter page.
+ */
+export function letterChecks(body: string, factsText: string, length: "standard" | "short" = "standard"): string[] {
+  const out: string[] = [];
+  const facts = factsText.replace(/,(?=\d{3})/g, "").toLowerCase();
+  const numbers = [...new Set([...body.replace(/(\d),(?=\d{3})/g, "$1").matchAll(/\b\d+(?:[.,]\d+)?\b/g)].map((m) => m[0]))];
+  const strange = numbers.filter((n) => !/^(19|20)\d{2}$/.test(n) && !facts.includes(n.replace(",", ".").toLowerCase()) && !facts.includes(n.toLowerCase()));
+  if (strange.length) out.push(`Numbers not found in your profile: ${strange.join(", ")}. Check they are right.`);
+  const style = [...new Set([...body.matchAll(STYLE_WORDS)].map((m) => m[0].toLowerCase()))];
+  if (style.length) out.push(`Words that sound boastful or generated: ${style.join(", ")}. Replace them.`);
+  if (/\b(earlier|previously)\b/i.test(body)) out.push("Uses “earlier” or “previously”: check the order of events against the dates.");
+  const { max } = LETTER_WORDS[length];
+  const n = wordCount(body);
+  if (n > max + 30) out.push(`${n} words: longer than ${max}. Shorten it, or check the programme's own limit.`);
+  return out;
 }
 
 export function parseLetter(raw: string): { title: string; body: string } {

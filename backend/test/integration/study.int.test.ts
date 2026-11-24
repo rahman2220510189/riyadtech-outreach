@@ -204,7 +204,7 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     const p = (await send("POST", "/api/v1/study/programs", { name: "ZZ letter programme", kind: "programme", country: "Austria", level: "master", englishRequirement: "moi_ok", requiredDocs: [] })).json<{ id: number }>();
     expect((await get(`/api/v1/study/programs/${p.id}/letter`)).json()).toMatchObject({ letter: null, ai: { configured: true } });
 
-    const d = await send("POST", `/api/v1/study/programs/${p.id}/letter/draft`, { notes: "I like the NLP group here.", length: "short" });
+    const d = await send("POST", `/api/v1/study/programs/${p.id}/letter/draft`, { notes: "I like the NLP group here.", target: "MSc Computer Science, ZZ University", length: "short" });
     expect(d.statusCode).toBe(200);
     const l = d.json<{ letter: { title: string; body: string; words: number; gaps: string[]; notes: string } }>().letter;
     expect(l.title).toBe("Statement of Purpose – ZZ letter programme");
@@ -218,6 +218,9 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     expect(prompt[1]!.content).toContain("300 to 400 words");
     expect(prompt[1]!.content).toContain("I like the NLP group here.");
     expect(prompt[1]!.content).toContain('"name":"ZZ letter programme"');
+    expect(prompt[1]!.content).toContain("Target programme (the student applies to this): MSc Computer Science, ZZ University");
+    expect(prompt[0]!.content).toMatch(/A scholarship is not a study programme/);
+    expect(d.json<{ letter: { target: string; checks: string[] } }>().letter).toMatchObject({ target: "MSc Computer Science, ZZ University", checks: [] });
 
     const saved = await send("PUT", `/api/v1/study/programs/${p.id}/letter`, { title: "My SOP", body: "Short text written by me." });
     expect(saved.json()).toMatchObject({ letter: { title: "My SOP", words: 5, gaps: [], notes: "I like the NLP group here." } });

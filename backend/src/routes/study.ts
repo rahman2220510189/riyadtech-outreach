@@ -10,7 +10,7 @@ import { waitingMessageIds } from "../mail/outbox.js";
 import { ownAddresses, sendLogged } from "../mail/send.js";
 import { resolveSettings } from "../settings/loader.js";
 import { type FitProfile, subjectFit, suggestedSubjects } from "../study/fit.js";
-import { aiConfigured, chat, draftEmail, draftLetter, letterGaps } from "../study/ai.js";
+import { aiConfigured, chat, draftEmail, draftLetter, letterChecks, letterGaps } from "../study/ai.js";
 import {
   DOC_KINDS,
   DOC_LABELS,
@@ -568,17 +568,28 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
 
   /* ---------------------------- Motivation letter (one per programme) ---------------------------- */
 
-  const letterView = (l: { id: bigint; programId: bigint; title: string; body: string; notes: string | null; aiModel: string | null; updatedAt: Date }) => ({
+  const letterView = (
+    l: { id: bigint; programId: bigint; title: string; body: string; notes: string | null; target: string | null; length: string; aiModel: string | null; updatedAt: Date },
+    factsText: string,
+  ) => ({
     id: Number(l.id),
     programId: Number(l.programId),
     title: l.title,
     body: l.body,
     notes: l.notes,
+    target: l.target,
+    length: l.length,
     aiModel: l.aiModel,
     updatedAt: l.updatedAt.toISOString(),
     words: l.body.trim() ? l.body.trim().split(/\s+/).length : 0,
     gaps: letterGaps(l.body),
+    /** Lines to check by hand: numbers not in my facts, boastful words, length, order words. */
+    checks: letterChecks(l.body, factsText, l.length === "short" ? "short" : "standard"),
   });
+
+  /** Everything the letter may rightly mention, as one text (to spot invented numbers). */
+  const letterFactsText = (prof: StudyProfile, p: StudyProgram, notes: string | null, target: string | null) =>
+    [JSON.stringify(aiFacts(prof, p, "application", []).profile), p.name, p.university ?? "", p.field ?? "", p.notes ?? "", p.funding ?? "", notes ?? "", target ?? ""].join("\n");
 
   async function findProgram(id: number) {
     const p = await db.studyProgram.findUnique({ where: { id: BigInt(id) } });
@@ -589,38 +600,45 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
   app.get("/programs/:id/letter", async (request) => {
     const p = await findProgram(idParam.parse(request.params).id);
     const l = await db.studyLetter.findUnique({ where: { programId: p.id } });
-    return { letter: l ? letterView(l) : null, program: { id: Number(p.id), name: p.name, university: p.university, country: p.country }, ai: { configured: aiConfigured(env), model: env.GROQ_MODEL } };
+    return { letter: l ? letterView(l, letterFactsText(await profile(), p, l.notes, l.target)) : null, isScholarship: p.kind === "scholarship", program: { id: Number(p.id), name: p.name, university: p.university, country: p.country }, ai: { configured: aiConfigured(env), model: env.GROQ_MODEL } };
   });
 
   /** A new AI draft from my profile, the programme and my notes. Replaces the text (the page asks first). */
   app.post("/programs/:id/letter/draft", async (request) => {
     const p = await findProgram(idParam.parse(request.params).id);
     const b = z
-      .object({ notes: z.string().trim().max(3000).optional(), length: z.enum(["standard", "short"]).default("standard") })
+      .object({ notes: z.string().trim().max(3000).optional(), target: z.string().trim().max(300).optional(), length: z.enum(["standard", "short"]).default("standard") })
       .strict()
       .parse(request.body ?? {});
-    const facts = aiFacts(await profile(), p, "application", []);
+    const prof = await profile();
+    const facts = aiFacts(prof, p, "application", []);
     const d = await draftLetter(env, {
       profile: facts.profile,
-      program: { ...facts.program, funding: p.funding, about: p.notes ? p.notes.slice(0, 800) : null },
+      program: { ...facts.program, kind: p.kind, funding: p.funding, about: p.notes ? p.notes.slice(0, 800) : null },
       notes: b.notes,
+      target: b.target,
       length: b.length,
     });
-    const data = { title: d.title, body: d.body, notes: b.notes ?? null, aiModel: d.model };
+    const data = { title: d.title, body: d.body, notes: b.notes ?? null, target: b.target ?? null, length: b.length, aiModel: d.model };
     const l = await db.studyLetter.upsert({ where: { programId: p.id }, update: data, create: { programId: p.id, ...data } });
-    return { letter: letterView(l) };
+    return { letter: letterView(l, letterFactsText(prof, p, l.notes, l.target)) };
   });
 
   /** Saves my edits (or a letter written by hand). */
   app.put("/programs/:id/letter", async (request) => {
     const p = await findProgram(idParam.parse(request.params).id);
     const b = z
-      .object({ title: z.string().trim().min(1).max(200), body: z.string().max(20000), notes: z.string().trim().max(3000).nullable().optional() })
+      .object({
+        title: z.string().trim().min(1).max(200),
+        body: z.string().max(20000),
+        notes: z.string().trim().max(3000).nullable().optional(),
+        target: z.string().trim().max(300).nullable().optional(),
+      })
       .strict()
       .parse(request.body);
-    const data = { title: b.title, body: b.body, ...(b.notes !== undefined ? { notes: b.notes } : {}) };
+    const data = { title: b.title, body: b.body, ...(b.notes !== undefined ? { notes: b.notes } : {}), ...(b.target !== undefined ? { target: b.target } : {}) };
     const l = await db.studyLetter.upsert({ where: { programId: p.id }, update: data, create: { programId: p.id, ...data } });
-    return { letter: letterView(l) };
+    return { letter: letterView(l, letterFactsText(await profile(), p, l.notes, l.target)) };
   });
 
   app.delete("/programs/:id/letter", async (request, reply) => {
