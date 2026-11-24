@@ -41,6 +41,9 @@ describe("Gmail API", () => {
     await expect(exchangeCode(env, "code")).rejects.toThrow(/Connect Gmail again/);
     setGmailTestHooks({ fetch: () => json(200, { access_token: "at" }) });
     await expect(exchangeCode(env, "code")).rejects.toThrow(/refresh token/);
+    // The send box was left unticked on Google's page.
+    setGmailTestHooks({ fetch: () => json(200, { access_token: "at", refresh_token: "rt", scope: "openid https://www.googleapis.com/auth/userinfo.email" }) });
+    await expect(exchangeCode(env, "code")).rejects.toThrow(/Send email on your behalf/);
   });
 
   it("sends the full MIME message (with attachments) as base64url", async () => {
@@ -64,5 +67,7 @@ describe("Gmail API", () => {
 
     setGmailTestHooks({ fetch: (url) => (urlOf(url).includes("oauth2") ? json(200, { access_token: "at", expires_in: 3600 }) : json(403, { error: { message: "Gmail API has not been used in project 1 before or it is disabled" } })) });
     await expect(sendGmail(env, "rt-2", mail)).rejects.toThrow(/Gmail API: Gmail API has not been used/);
+    setGmailTestHooks({ fetch: (url) => (urlOf(url).includes("oauth2") ? json(200, { access_token: "at", expires_in: 3600 }) : json(403, { error: { message: "Request had insufficient authentication scopes.", status: "PERMISSION_DENIED" } })) });
+    await expect(sendGmail(env, "rt-3", mail)).rejects.toThrow(/Send email on your behalf/);
   });
 });

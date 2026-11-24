@@ -80,6 +80,8 @@ interface TokenAnswer {
   refresh_token?: string;
   id_token?: string;
   expires_in?: number;
+  /** The scopes actually granted (Google's consent page lets the user untick some). */
+  scope?: string;
   error?: string;
   error_description?: string;
 }
@@ -113,8 +115,15 @@ export function emailFromIdToken(idToken: string | undefined): string | null {
   }
 }
 
+export const SEND_SCOPE_MISSING =
+  "The permission to send e-mail was not ticked on Google's page. Press “Connect Gmail” again and tick “Send email on your behalf” before Continue.";
+
 export async function exchangeCode(env: GmailEnv, code: string): Promise<{ refreshToken: string; email: string | null }> {
   const j = await tokenCall({ code, client_id: env.GOOGLE_CLIENT_ID ?? "", client_secret: env.GOOGLE_CLIENT_SECRET ?? "", redirect_uri: redirectUri(env), grant_type: "authorization_code" });
+  if (j.scope !== undefined && !j.scope.split(" ").includes("https://www.googleapis.com/auth/gmail.send")) {
+    if (j.refresh_token) await revokeGmail(j.refresh_token);
+    throw new AppError(400, "GMAIL_SCOPE", SEND_SCOPE_MISSING);
+  }
   if (!j.refresh_token) throw new AppError(502, "GMAIL_TOKEN", "Google gave no long-term permission (refresh token). Remove the app under myaccount.google.com → Security → Third-party access, then connect again.");
   return { refreshToken: j.refresh_token, email: emailFromIdToken(j.id_token) };
 }
@@ -164,7 +173,11 @@ export async function sendGmail(env: GmailEnv, refreshToken: string, m: Outgoing
   const j = (await res.json().catch(() => ({}))) as { id?: string; error?: { message?: string; status?: string } };
   if (!res.ok || !j.id) {
     if (res.status === 401) tokenCache.clear();
-    throw new AppError(res.status === 401 || res.status === 403 ? 401 : 502, "GMAIL_SEND", `Gmail API: ${j.error?.message ?? `HTTP ${res.status}`}`);
+    const msg = j.error?.message ?? `HTTP ${res.status}`;
+    if (/insufficient authentication scopes|insufficientPermissions|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(msg) || j.error?.status === "PERMISSION_DENIED" && /scope/i.test(msg)) {
+      throw new AppError(401, "GMAIL_SEND", SEND_SCOPE_MISSING);
+    }
+    throw new AppError(res.status === 401 || res.status === 403 ? 401 : 502, "GMAIL_SEND", `Gmail API: ${msg}`);
   }
   return { id: j.id };
 }
