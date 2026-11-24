@@ -165,9 +165,10 @@ Facts:
 - Use ONLY the facts given (student facts, programme facts, target programme and the student's own notes). Never invent grades, awards, projects, publications, job titles, employers, dates, numbers, test scores, professors, courses, coursework subjects, modules, labs or research groups. Do not describe what the student studied in class unless the facts say so.
 - Where the letter needs something that is not in the facts (a specific course, lab or research group of the programme, or a goal the student has not given), write a short gap marker [[…]] saying what the student should add. Use at most 4 markers.
 - A scholarship is not a study programme. If the programme facts are a scholarship, write that the student applies to the target programme through the scholarship; if no target programme is given, write [[programme name]] at [[university]].
+- Never mention money: no stipend or scholarship amounts, costs, prices, budgets or cost caps, in any currency. Reasons for the scholarship are academic, not financial details.
 - Keep events in the order their dates show. Do not write "earlier", "previously" or "later" about two activities unless their dates prove it.
 Content:
-- Structure in plain paragraphs: (1) opening: the programme and the field; (2) academic background, short; (3) research, the longest part: what was done, what was learned; (4) work experience in two or three sentences, focused on what it taught; leave out business figures such as budgets, prices, customer or city counts; (5) why this programme, university and country, only reasons from the facts or the notes; (6) goals after the degree, realistic for a fresh graduate (a PhD or a research-oriented role, not a "senior" role); (7) one-sentence closing.
+- Structure in plain paragraphs: (1) opening: the programme and the field; (2) academic background, short; (3) research, the longest part: what was done, what was learned; (4) work experience in at most 80 words in total (one paragraph for all jobs), focused on what it taught; leave out business figures such as budgets, prices, lead, customer, city or country counts; (5) why this programme, university and country, only reasons from the facts or the notes; (6) goals after the degree, realistic for a fresh graduate (a PhD or a research-oriented role, not a "senior" role); (7) one-sentence closing.
 - Concrete and modest, first person, consistent British English. No clichés and no praise words such as "remarkable", "passionate", "cutting-edge", "state-of-the-art", "world-class", "unique opportunity". Never belittle the student's home country or university. No flattery of the host university. No markdown, no bullet points, no emojis.
 - Do not include addresses, date lines or "Dear …" greetings; the letter starts with its first paragraph and ends with the student's full name exactly as given.
 Answer exactly in this format:
@@ -214,7 +215,7 @@ export async function draftLetter(env: Pick<Env, "GROQ_API_KEY" | "GROQ_MODEL">,
 }
 
 /** Words that make a letter sound generated or boastful. */
-const STYLE_WORDS = /\b(remarkabl[ey]|passionate|passion|cutting[- ]edge|state[- ]of[- ]the[- ]art|world[- ]class|unique opportunity|esteemed|prestigious|unavailable in bangladesh|senior research role)\b/gi;
+const STYLE_WORDS = /\b(remarkabl[ey]|passionate|passion|cutting[- ]edge|state[- ]of[- ]the[- ]art|world[- ]class|unique opportunity|esteemed|prestigious|near[- ]perfect|production[- ]grade|unavailable in bangladesh|senior research role)\b/gi;
 
 /**
  * Things to check by hand: numbers that are not in my facts (the AI may have invented them),
@@ -228,6 +229,8 @@ export function letterChecks(body: string, factsText: string, length: "standard"
   if (strange.length) out.push(`Numbers not found in your profile: ${strange.join(", ")}. Check they are right.`);
   const style = [...new Set([...body.matchAll(STYLE_WORDS)].map((m) => m[0].toLowerCase()))];
   if (style.length) out.push(`Words that sound boastful or generated: ${style.join(", ")}. Replace them.`);
+  const money = [...new Set([...body.matchAll(/(?:[€$£]\s?\d[\d.,]*|\b\d[\d.,]*\s?(?:euros?|eur|usd|dollars?|huf|forints?|taka|bdt)\b)/gi)].map((m) => m[0]))];
+  if (money.length) out.push(`Money amounts (${money.join(", ")}): leave stipends, costs and budgets out of a motivation letter.`);
   if (/\b(earlier|previously)\b/i.test(body)) out.push("Uses “earlier” or “previously”: check the order of events against the dates.");
   const { max } = LETTER_WORDS[length];
   const n = wordCount(body);

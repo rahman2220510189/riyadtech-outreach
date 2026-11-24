@@ -38,6 +38,7 @@ describe("letter checks", () => {
     expect(c.join(" ")).toMatch(/earlier/);
     expect(c.join(" ")).toMatch(/longer than 650/);
     expect(letterChecks("A short, plain letter about my thesis.", facts)).toEqual([]);
+    expect(letterChecks("A stipend of approximately €110 and a cap of 8 USD.", "stipend about HUF 43,700 (~€110), $8 cap").join(" ")).toMatch(/Money amounts \(€110, 8 USD\)/);
   });
 });
 
