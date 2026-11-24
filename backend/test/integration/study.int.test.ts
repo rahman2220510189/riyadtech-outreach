@@ -333,10 +333,17 @@ describe.skipIf(!url)("study abroad (integration)", () => {
 
       const off = await send("POST", `/api/v1/mailboxes/${mailboxId}/gmail/disconnect`, {}, appGmail);
       expect(off.json()).toMatchObject({ gmailConnected: false });
+
+      // An alias (sends as hello@…, logs in as a Gmail account): the login account is accepted.
+      await db.mailbox.update({ where: { id: BigInt(mailboxId) }, data: { smtpUser: "zz.alias.owner@gmail.invalid" } });
+      const hint = new URL((await send("POST", `/api/v1/mailboxes/${mailboxId}/gmail/start`, {}, appGmail)).json<{ url: string }>().url);
+      expect(hint.searchParams.get("login_hint")).toBe("zz.alias.owner@gmail.invalid");
+      account = "zz.alias.owner@gmail.invalid";
+      expect((await callback(hint.searchParams.get("state")!)).headers.location).toMatch(/gmail=connected/);
     } finally {
       setGmailTestHooks({});
       await db.mailLog.deleteMany({ where: { toEmail: "gmail@testuni.invalid" } });
-      await db.mailbox.update({ where: { id: BigInt(mailboxId) }, data: { gmailRefreshTokenEnc: null, gmailConnectedAt: null } });
+      await db.mailbox.update({ where: { id: BigInt(mailboxId) }, data: { gmailRefreshTokenEnc: null, gmailConnectedAt: null, smtpUser: "student@uni.invalid" } });
       await appGmail.close();
     }
   });

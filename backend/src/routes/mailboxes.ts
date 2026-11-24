@@ -197,7 +197,8 @@ export const mailboxesRoutes: FastifyPluginCallback<MailboxesRoutesOptions> = (a
     const { id } = idParam.parse(request.params);
     const m = await find(id);
     if (!gmailConfigured(env)) throw new AppError(400, "GMAIL_NOT_SET", "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set on the server yet");
-    return { url: authUrl(env, makeState(env.JWT_SECRET, m.id), m.fromEmail) };
+    // Hint the account that owns the mailbox (for an alias: the Gmail login, not the alias).
+    return { url: authUrl(env, makeState(env.JWT_SECRET, m.id), m.smtpUser.includes("@") ? m.smtpUser : m.fromEmail) };
   });
 
   /** Google sends the browser back here; the result is shown on the Mailboxes page. */
@@ -211,9 +212,12 @@ export const mailboxesRoutes: FastifyPluginCallback<MailboxesRoutesOptions> = (a
     if (!m) return back({ gmail: "error", reason: "The mailbox no longer exists." });
     try {
       const t = await exchangeCode(env, q.code);
-      if (t.email && t.email !== m.fromEmail.toLowerCase()) {
+      // The Google account must be the mailbox's own address, or the account it logs in with
+      // (an alias such as hello@riyadtech.xyz is sent from the Gmail account hello.riyadtech@gmail.com).
+      const allowed = [m.fromEmail, m.smtpUser].map((x) => x.trim().toLowerCase());
+      if (t.email && !allowed.includes(t.email)) {
         await revokeGmail(t.refreshToken);
-        return back({ gmail: "error", reason: `You signed in as ${t.email}, but this mailbox sends as ${m.fromEmail}. Choose that account on Google's page.` });
+        return back({ gmail: "error", reason: `You signed in as ${t.email}, but this mailbox sends as ${m.fromEmail} (login ${m.smtpUser}). Choose that account on Google's page.` });
       }
       await db.mailbox.update({ where: { id: m.id }, data: { gmailRefreshTokenEnc: encryptSecret(env.ENCRYPTION_KEY, t.refreshToken), gmailConnectedAt: new Date(), gmailError: null } });
       await audit(request, "mailbox.gmail_connected", m.id, { fromEmail: m.fromEmail });
