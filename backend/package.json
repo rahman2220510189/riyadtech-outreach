@@ -33,7 +33,8 @@
     "jobs:check": "tsx src/cli/jobs-check.ts",
     "study:check": "tsx src/cli/study-check.ts",
     "study:ai": "tsx src/cli/study-ai.ts",
-    "seed:demo": "tsx src/cli/seed-demo.ts"
+    "seed:demo": "tsx src/cli/seed-demo.ts",
+    "mail:outbox": "tsx src/cli/mail-outbox.ts"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",

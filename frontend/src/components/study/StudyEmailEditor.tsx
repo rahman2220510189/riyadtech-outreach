@@ -66,7 +66,12 @@ function Editor({ e }: { e: StudyEmail }) {
             Written by the AI ({e.aiModel}). Read every sentence: check names, numbers and claims, and replace everything in [[double brackets]].
           </p>
         )}
-        {sent && <p className="rounded-xl border border-go/40 bg-go-soft px-4 py-3 text-sm text-go">Sent {e.sentAt?.slice(0, 16).replace("T", " ")}. It can no longer be changed.</p>}
+        {sent && e.waiting && (
+          <p className="rounded-xl border border-warn/40 bg-warn-soft px-4 py-3 text-sm text-warn">
+            Queued {e.sentAt?.slice(0, 16).replace("T", " ")}. Waiting for your PC: it goes out when npm run mail:outbox runs there. It can no longer be changed.
+          </p>
+        )}
+        {sent && !e.waiting && <p className="rounded-xl border border-go/40 bg-go-soft px-4 py-3 text-sm text-go">Sent {e.sentAt?.slice(0, 16).replace("T", " ")}. It can no longer be changed.</p>}
         {e.status === "failed" && e.error && <p className="rounded-xl border border-bad/40 bg-bad-soft px-4 py-3 text-sm text-bad">Sending failed: {e.error}</p>}
         <div className="space-y-4 rounded-xl border border-line bg-surface px-5 py-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -179,7 +184,7 @@ function Editor({ e }: { e: StudyEmail }) {
               {test.isPending ? "Sending test…" : "Send test"}
             </button>
             {dirty && <p className="text-xs text-ink-3">Save first.</p>}
-            {test.isSuccess && <p className="text-sm text-go">Test sent to {test.data.to}. Check that inbox.</p>}
+            {test.isSuccess && <p className="text-sm text-go">{test.data.queued ? `Test queued for ${test.data.to}. Waiting for your PC: it goes out when npm run mail:outbox runs there.` : `Test sent to ${test.data.to}. Check that inbox.`}</p>}
             {test.error && <p className="text-sm text-bad">{test.error.message}</p>}
           </section>
         )}

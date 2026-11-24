@@ -50,7 +50,7 @@ export function StudyEmails() {
                   <td className="px-4 py-2 text-ink-2">{e.toEmail ?? "—"}</td>
                   <td className="px-4 py-2 text-ink-2">{PURPOSE[e.purpose]}</td>
                   <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[e.status]}`}>{e.status === "sent" && e.sentAt ? `sent ${e.sentAt.slice(0, 10)}` : e.status}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[e.status]}`}>{e.status === "sent" && e.waiting ? "waiting for your PC" : e.status === "sent" && e.sentAt ? `sent ${e.sentAt.slice(0, 10)}` : e.status}</span>
                   </td>
                 </tr>
               ))}

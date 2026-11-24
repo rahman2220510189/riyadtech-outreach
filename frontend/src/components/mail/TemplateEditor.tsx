@@ -291,7 +291,8 @@ function PreviewPanel({ draft, templateId }: { draft: Draft; templateId: number 
             <span className="text-bad">{testSend.error.message}</span>
           ) : testSend.data ? (
             <span className="text-go">
-              Sent to {testSend.data.to}: “{testSend.data.subject}” (as for {testSend.data.recipient}). Check your inbox and spam folder.
+              {testSend.data.queued ? "Queued for" : "Sent to"} {testSend.data.to}: “{testSend.data.subject}” (as for {testSend.data.recipient}).{" "}
+              {testSend.data.queued ? "Waiting for your PC: it goes out when npm run mail:outbox runs there." : "Check your inbox and spam folder."}
             </span>
           ) : null}
         </p>

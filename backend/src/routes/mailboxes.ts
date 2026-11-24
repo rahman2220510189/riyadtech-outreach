@@ -12,7 +12,7 @@ import { resolveSettings } from "../settings/loader.js";
 
 export interface MailboxesRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED" | "MAIL_DELIVERY">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
@@ -161,7 +161,11 @@ export const mailboxesRoutes: FastifyPluginCallback<MailboxesRoutesOptions> = (a
       }
     };
     const result = {
-      smtp: await check("SMTP", () => verifySmtp(smtp)),
+      // On a host that blocks SMTP the check would always time out; the outbox on my PC sends instead.
+      smtp:
+        env.MAIL_DELIVERY === "outbox"
+          ? { ok: true, message: "SMTP is not checked here: this server sends through the outbox on your PC (npm run mail:outbox). Test the mailbox there, or send a test e-mail." }
+          : await check("SMTP", () => verifySmtp(smtp)),
       imap: imap.password ? await check("IMAP", () => verifyImap(imap)) : { ok: false, message: "IMAP password not set" },
       at: new Date().toISOString(),
     };

@@ -81,6 +81,9 @@ flowchart LR
   requesting its own `/health`, and a GitHub Actions schedule wakes it in the morning. Outside
   those hours it sleeps, so the database stays inside Neon's 100 compute-hours a month.
   The trade-offs are written up in `backend/docs/decisions.md`.
+- **Mail on a free host.** Render's free plan blocks SMTP, so the hosted tool queues e-mails in an
+  outbox table, and `npm run mail:outbox` on my PC sends them through the mailbox's own SMTP
+  server and writes back the result. Each message is claimed once, so nothing is sent twice.
 - **Security.** Single admin with bcrypt password hashing (cost 12), an HttpOnly JWT cookie, a CSRF header,
   login rate limiting and strict CORS. Secrets live only in environment variables. Mailbox
   passwords are encrypted at rest. In production, the app refuses to start with placeholder secrets.

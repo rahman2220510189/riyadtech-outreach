@@ -11,7 +11,7 @@ import { resolveSettings } from "../settings/loader.js";
 
 export interface TemplatesRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL" | "MAIL_DELIVERY">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
@@ -196,7 +196,7 @@ export const templatesRoutes: FastifyPluginCallback<TemplatesRoutesOptions> = (a
       data: { actor: request.admin?.email ?? null, action: "mail.test_send", entity: "mailbox", entityId: String(mailbox.id), details: { to: b.to, ok: result.ok, recipient: recipient.label }, ip: request.ip },
     });
     if (!result.ok) throw new AppError(502, "SEND_FAILED", result.error);
-    return { sent: true, to: b.to, subject: `[TEST] ${m.subject}`, messageId: result.messageId, response: result.response, recipient: recipient.label, warnings: m.warnings };
+    return { sent: true, to: b.to, subject: `[TEST] ${m.subject}`, messageId: result.messageId, response: result.response, queued: !!(result.ok && result.queued), recipient: recipient.label, warnings: m.warnings };
   });
 
   done();

@@ -147,6 +147,8 @@ export interface StudyEmail {
   sentAt: string | null;
   error: string | null;
   hasPlaceholders: boolean;
+  /** Sent from the hosted tool, still waiting in the outbox for my PC. */
+  waiting: boolean;
   updatedAt: string;
 }
 
@@ -368,7 +370,7 @@ export function useDeleteStudyEmail() {
 }
 
 export function useStudyTestSend(id: number) {
-  return useMutation({ mutationFn: async (to: string) => (await api.post<{ sent: boolean; to: string }>(`/study/emails/${id}/test-send`, { to }, { timeout: 90_000 })).data });
+  return useMutation({ mutationFn: async (to: string) => (await api.post<{ sent: boolean; to: string; queued?: boolean }>(`/study/emails/${id}/test-send`, { to }, { timeout: 90_000 })).data });
 }
 
 export function useStudySend(id: number) {

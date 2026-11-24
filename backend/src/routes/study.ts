@@ -6,6 +6,7 @@ import type { Db } from "../db/client.js";
 import type { Prisma, StudyEmail, StudyProfile, StudyProgram } from "../generated/prisma/client.js";
 import { suppressedSet } from "../leads/suppression.js";
 import { AppError, errors } from "../lib/errors.js";
+import { waitingMessageIds } from "../mail/outbox.js";
 import { ownAddresses, sendLogged } from "../mail/send.js";
 import { resolveSettings } from "../settings/loader.js";
 import { type FitProfile, subjectFit, suggestedSubjects } from "../study/fit.js";
@@ -25,7 +26,7 @@ import {
 
 export interface StudyRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED" | "GROQ_API_KEY" | "GROQ_MODEL">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "SENDING_ENABLED" | "GROQ_API_KEY" | "GROQ_MODEL" | "MAIL_DELIVERY">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
@@ -509,7 +510,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
 
   /* ---------------------------------- e-mails ---------------------------------- */
 
-  const emailView = (e: StudyEmail & { program?: { id: bigint; name: string } | null }) => ({
+  const emailView = (e: StudyEmail & { program?: { id: bigint; name: string } | null }, waiting = false) => ({
     id: Number(e.id),
     programId: e.programId ? Number(e.programId) : null,
     program: e.program?.name ?? null,
@@ -524,6 +525,8 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
     sentAt: e.sentAt,
     error: e.error,
     hasPlaceholders: PLACEHOLDER.test(`${e.subject}\n${e.body}`),
+    /** Sent from the tool, but still waiting in the outbox for my PC. */
+    waiting,
     updatedAt: e.updatedAt,
   });
   const findEmail = async (id: number) => {
@@ -634,10 +637,14 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
       orderBy: { updatedAt: "desc" },
       take: 200,
     });
-    return { items: rows.map(emailView), sendingEnabled: env.SENDING_ENABLED, ai: { configured: aiConfigured(env), model: env.GROQ_MODEL } };
+    const waiting = await waitingMessageIds(db, rows.map((r) => r.messageId));
+    return { items: rows.map((r) => emailView(r, !!r.messageId && waiting.has(r.messageId))), mailDelivery: env.MAIL_DELIVERY, sendingEnabled: env.SENDING_ENABLED, ai: { configured: aiConfigured(env), model: env.GROQ_MODEL } };
   });
 
-  app.get("/emails/:id", async (request) => emailView(await findEmail(idParam.parse(request.params).id)));
+  app.get("/emails/:id", async (request) => {
+    const e = await findEmail(idParam.parse(request.params).id);
+    return emailView(e, (await waitingMessageIds(db, [e.messageId])).size > 0);
+  });
 
   /** A new draft for a programme: documents chosen, text by the AI (or empty to write by hand). */
   app.post("/emails", async (request, reply) => {
@@ -763,7 +770,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
     const p = await prepare(e);
     const r = await sendLogged(db, env, { kind: "test", mailbox: p.mailbox, to, subject: `[TEST] ${e.subject}`, text: e.body, attachments: p.attachments, actor: request.admin?.email ?? null });
     if (!r.ok) throw new AppError(502, "SEND_FAILED", r.error);
-    return { sent: true, to };
+    return { sent: true, to, queued: !!r.queued };
   });
 
   /** Sends it to the university. Needs SENDING_ENABLED=true; one by one, with a daily limit. */
@@ -781,7 +788,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
     const p = await prepare(e);
     const claimed = await db.studyEmail.updateMany({ where: { id: e.id, status: { in: ["draft", "failed"] } }, data: { status: "sent", sentAt: new Date(), error: null } });
     if (claimed.count === 0) throw new AppError(409, "ALREADY_SENT", "This e-mail is being sent or was sent already");
-    const r = await sendLogged(db, env, { kind: "study", mailbox: p.mailbox, to: e.toEmail, subject: e.subject, text: e.body, attachments: p.attachments, actor: request.admin?.email ?? null });
+    const r = await sendLogged(db, env, { kind: "study", mailbox: p.mailbox, to: e.toEmail, subject: e.subject, text: e.body, attachments: p.attachments, actor: request.admin?.email ?? null, ref: { kind: "study_email", id: e.id } });
     const u = await db.studyEmail.update({
       where: { id: e.id },
       data: r.ok ? { messageId: r.messageId } : { status: "failed", sentAt: null, error: r.error.slice(0, 1000) },
@@ -796,7 +803,7 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
       data: { actor: request.admin?.email ?? null, action: r.ok ? "study.email_sent" : "study.email_failed", entity: "study_email", entityId: String(e.id), details: { to: e.toEmail, program: e.program?.name ?? null }, ip: request.ip },
     });
     if (!r.ok) throw new AppError(502, "SEND_FAILED", r.error);
-    return emailView(u);
+    return emailView(u, !!r.queued);
   });
 
   done();

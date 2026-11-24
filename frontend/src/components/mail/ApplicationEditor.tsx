@@ -65,7 +65,9 @@ function Editor({ a }: { a: Application }) {
             {a.role} · {a.company}
           </h1>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[a.status]}`}>{APPLICATION_STATUS_LABELS[a.status]}</span>
+          {a.waiting && <span className="rounded-full bg-warn-soft px-2.5 py-0.5 text-xs font-semibold text-warn">waiting for your PC</span>}
         </div>
+        {a.waiting && <p className="mt-2 text-sm text-warn">Waiting for your PC: it goes out when npm run mail:outbox runs there.</p>}
         {a.job && (
           <p className="mt-1 text-sm text-ink-2">
             Advert:{" "}
@@ -165,7 +167,7 @@ function Editor({ a }: { a: Application }) {
             </button>
             {dirty && <span className="text-ink-3">Save first.</span>}
             {test.error && <span className="text-bad">{test.error.message}</span>}
-            {test.data && <span className="text-go">Test sent to {test.data.to}, with the attachments.</span>}
+            {test.data && <span className="text-go">{test.data.queued ? `Test queued for ${test.data.to}. Waiting for your PC: it goes out when npm run mail:outbox runs there.` : `Test sent to ${test.data.to}, with the attachments.`}</span>}
           </div>
           <div className="flex flex-wrap items-center gap-3 border-t border-line-soft pt-3 text-sm">
             {!sendingEnabled ? (

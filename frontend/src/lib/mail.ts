@@ -174,7 +174,7 @@ export function useTestAddresses() {
 export function useTestSend() {
   return useMutation({
     mutationFn: async (body: { templateId?: number; kind: TemplateKind; subject: string; body: string; mailboxId: number; to: string; leadId?: number; listLeadId?: number }) =>
-      (await api.post<{ sent: boolean; to: string; subject: string; recipient: string; warnings: string[] }>("/templates/test-send", body, { timeout: 90_000 })).data,
+      (await api.post<{ sent: boolean; to: string; subject: string; recipient: string; warnings: string[]; queued?: boolean }>("/templates/test-send", body, { timeout: 90_000 })).data,
   });
 }
 
@@ -212,6 +212,8 @@ export interface Application {
   error: string | null;
   note: string | null;
   hasPlaceholders: boolean;
+  /** Sent from the hosted tool, still waiting in the outbox for my PC. */
+  waiting: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -273,7 +275,7 @@ export function useDeleteApplication() {
 
 export function useApplicationTestSend(id: number) {
   return useMutation({
-    mutationFn: async (to: string) => (await api.post<{ sent: boolean; to: string }>(`/applications/${id}/test-send`, { to }, { timeout: 90_000 })).data,
+    mutationFn: async (to: string) => (await api.post<{ sent: boolean; to: string; queued?: boolean }>(`/applications/${id}/test-send`, { to }, { timeout: 90_000 })).data,
   });
 }
 

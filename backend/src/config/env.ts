@@ -76,6 +76,12 @@ const envSchema = z
     GROQ_MODEL: z.string().trim().min(3).default("openai/gpt-oss-120b"),
     /** false (default): campaigns only fill the Outbox preview and applications are not sent. */
     SENDING_ENABLED: booleanFromString.default(false),
+    /**
+     * How e-mails leave the tool. direct: SMTP from this server (locally). outbox: they wait in the
+     * database and `npm run mail:outbox` on my PC sends them through SMTP (free hosts such as
+     * Render block SMTP ports).
+     */
+    MAIL_DELIVERY: z.enum(["direct", "outbox"]).default("direct"),
     /** Set automatically by Render on hosted services. */
     RENDER: z.string().optional(),
   })

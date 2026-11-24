@@ -7,13 +7,14 @@ import type { Application, Prisma } from "../generated/prisma/client.js";
 import { suppressedSet } from "../leads/suppression.js";
 import { AppError, errors } from "../lib/errors.js";
 import { composeMail, countryName, type Recipient } from "../mail/compose.js";
+import { waitingMessageIds } from "../mail/outbox.js";
 import { ownAddresses, sendLogged } from "../mail/send.js";
 import { resolveSettings } from "../settings/loader.js";
 import { applyEmail } from "./leads.js";
 
 export interface ApplicationsRoutesOptions {
   db: Db;
-  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL" | "SENDING_ENABLED">;
+  env: Pick<Env, "ENCRYPTION_KEY" | "PUBLIC_BASE_URL" | "SENDING_ENABLED" | "MAIL_DELIVERY">;
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
@@ -22,7 +23,7 @@ const MAX_CV_BYTES = 5 * 1024 * 1024;
 const CV_TYPES: Record<string, string> = { pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" };
 const PLACEHOLDER = /\[\[[\s\S]*?\]\]/;
 
-function view(a: Application & { jobAd?: { title: string; url: string; source: string } | null; mailbox?: { fromEmail: string } | null }) {
+function view(a: Application & { jobAd?: { title: string; url: string; source: string } | null; mailbox?: { fromEmail: string } | null }, waiting = false) {
   return {
     id: Number(a.id),
     jobAdId: a.jobAdId ? Number(a.jobAdId) : null,
@@ -43,6 +44,8 @@ function view(a: Application & { jobAd?: { title: string; url: string; source: s
     error: a.error,
     note: a.note,
     hasPlaceholders: PLACEHOLDER.test(`${a.subject}\n${a.body}`),
+    /** Sent from the tool, but still waiting in the outbox for my PC. */
+    waiting,
     createdAt: a.createdAt,
     updatedAt: a.updatedAt,
   };
@@ -115,9 +118,11 @@ export const applicationsRoutes: FastifyPluginCallback<ApplicationsRoutesOptions
       db.application.count({ where: { sentAt: { gte: new Date(new Date().setUTCHours(0, 0, 0, 0)) } } }),
     ]);
     const s = await settings();
+    const waiting = await waitingMessageIds(db, rows.map((r) => r.messageId));
     return {
       total,
-      items: rows.map(view),
+      items: rows.map((r) => view(r, !!r.messageId && waiting.has(r.messageId))),
+      mailDelivery: env.MAIL_DELIVERY,
       byStatus: Object.fromEntries(byStatus.map((r) => [r.status, r._count._all])),
       sendingEnabled: env.SENDING_ENABLED,
       sentToday,
@@ -125,7 +130,10 @@ export const applicationsRoutes: FastifyPluginCallback<ApplicationsRoutesOptions
     };
   });
 
-  app.get("/:id", async (request) => view(await find(idParam.parse(request.params).id)));
+  app.get("/:id", async (request) => {
+    const a = await find(idParam.parse(request.params).id);
+    return view(a, (await waitingMessageIds(db, [a.messageId])).size > 0);
+  });
 
   /** A new draft: from a job advert (company, role, the company's address if it is also a lead) and a job template. */
   app.post("/", async (request, reply) => {
@@ -265,7 +273,7 @@ export const applicationsRoutes: FastifyPluginCallback<ApplicationsRoutesOptions
     const p = await prepare(a, to);
     const r = await sendLogged(db, env, { kind: "test", mailbox: p.mailbox, to, subject: `[TEST] ${a.subject}`, text: a.body, attachments: p.attachments, actor: request.admin?.email ?? null });
     if (!r.ok) throw new AppError(502, "SEND_FAILED", r.error);
-    return { sent: true, to, messageId: r.messageId };
+    return { sent: true, to, messageId: r.messageId, queued: !!r.queued };
   });
 
   /** Sends the application to the company. Needs SENDING_ENABLED=true; checks suppression and the daily limit. */
@@ -288,7 +296,7 @@ export const applicationsRoutes: FastifyPluginCallback<ApplicationsRoutesOptions
     // Claim it first, so a double click cannot send twice.
     const claimed = await db.application.updateMany({ where: { id: a.id, status: { in: ["draft", "failed"] } }, data: { status: "sent", sentAt: new Date(), error: null } });
     if (claimed.count === 0) throw new AppError(409, "ALREADY_SENT", "This application is being sent or was sent already");
-    const r = await sendLogged(db, env, { kind: "application", mailbox: p.mailbox, to: a.toEmail, subject: a.subject, text: a.body, attachments: p.attachments, actor: request.admin?.email ?? null });
+    const r = await sendLogged(db, env, { kind: "application", mailbox: p.mailbox, to: a.toEmail, subject: a.subject, text: a.body, attachments: p.attachments, actor: request.admin?.email ?? null, ref: { kind: "application", id: a.id } });
     const u = await db.application.update({
       where: { id: a.id },
       data: r.ok ? { messageId: r.messageId, smtpResponse: r.response.slice(0, 500) } : { status: "failed", sentAt: null, error: r.error.slice(0, 1000) },
@@ -297,7 +305,7 @@ export const applicationsRoutes: FastifyPluginCallback<ApplicationsRoutesOptions
     if (r.ok && u.jobAdId) await db.jobAd.update({ where: { id: u.jobAdId }, data: { status: "applied" } });
     await audit(request, r.ok ? "application.sent" : "application.failed", a.id, { to: a.toEmail, company: a.company, ...(r.ok ? {} : { error: r.error.slice(0, 200) }) });
     if (!r.ok) throw new AppError(502, "SEND_FAILED", r.error);
-    return view(u);
+    return view(u, !!r.queued);
   });
 
   done();

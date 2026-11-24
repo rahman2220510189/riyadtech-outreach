@@ -194,7 +194,9 @@ export function ApplicationsView() {
                     {a.note ? ` · ${a.note}` : ""}
                   </span>
                 </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[a.status]}`}>{APPLICATION_STATUS_LABELS[a.status]}</span>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${a.waiting ? "bg-warn-soft text-warn" : STATUS_STYLE[a.status]}`}>
+                  {a.waiting ? "waiting for your PC" : APPLICATION_STATUS_LABELS[a.status]}
+                </span>
               </Link>
             </li>
           ))}

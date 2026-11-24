@@ -13,6 +13,7 @@ import { createDb, type Db } from "../../src/db/client.js";
 import { JOB_SUMMARIZERS } from "../../src/jobs/handlers.js";
 import { JobStore } from "../../src/jobs/store.js";
 import { encryptSecret } from "../../src/mail/crypto.js";
+import { deliverOutbox } from "../../src/mail/outbox.js";
 import { type OutgoingMail, setMailTestHooks } from "../../src/mail/transport.js";
 import { syncStudySeeds } from "../../src/seed/sync.js";
 import { type ChatMessage, setAiTestHook } from "../../src/study/ai.js";
@@ -28,6 +29,7 @@ describe.skipIf(!url)("study abroad (integration)", () => {
   let db: Db;
   let app: FastifyInstance;
   let appSending: FastifyInstance;
+  let appOutbox: FastifyInstance;
   let cookie: Record<string, string>;
   let savedProfile: unknown = null;
   const sent: OutgoingMail[] = [];
@@ -59,6 +61,7 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     const deps = { authStore: prismaAuthStore(db), authOptions: { dummyHashCost: 4 }, data: { db, jobs: new JobStore(db, JOB_SUMMARIZERS) } };
     app = await buildApp(testEnv(env), deps);
     appSending = await buildApp(testEnv({ ...env, SENDING_ENABLED: "true" }), deps);
+    appOutbox = await buildApp(testEnv({ ...env, SENDING_ENABLED: "true", MAIL_DELIVERY: "outbox" }), deps);
     const login = await app.inject({ method: "POST", url: "/api/v1/auth/login", headers: CSRF, payload: { email: ADMIN, password: "plum-orbit-lantern-47" }, remoteAddress: "10.88.0.6" });
     cookie = { [SESSION_COOKIE]: login.cookies.find((c) => c.name === SESSION_COOKIE)?.value ?? "" };
     const box = await db.mailbox.create({
@@ -83,6 +86,7 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     setAiTestHook(null);
     await app?.close();
     await appSending?.close();
+    await appOutbox?.close();
     await cleanup();
     if (db && savedProfile) await db.studyProfile.update({ where: { id: 1 }, data: savedProfile });
     await db?.$disconnect();
@@ -228,6 +232,53 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     const cert = after.docsNeeded.find((x) => x.kind === "bsc_certificate")!;
     expect(cert.have).toBe(true);
     if (!hadCertificate) expect(cert.label).toMatch(/completion letter/);
+  });
+
+  it("outbox (hosted on a plan that blocks SMTP): sending queues it, the PC delivers it, failures come back", async () => {
+    const p = (await get("/api/v1/study/programs?status=all")).json<{ items: { id: number; name: string }[] }>().items.find((i) => i.name.startsWith("ZZ"))!;
+    const draft = async (subject: string) => {
+      const d = (await send("POST", "/api/v1/study/emails", { programId: p.id, useAi: false, mailboxId })).json<{ id: number }>();
+      await send("PATCH", `/api/v1/study/emails/${d.id}`, { subject, body: "Dear Admissions Team,\n\nA question about the MSc.\n\nKind regards,\nRiyad", toEmail: "outbox@testuni.invalid" });
+      return d.id;
+    };
+    const before = sent.length;
+    const id = await draft("ZZ outbox one");
+    const r = await send("POST", `/api/v1/study/emails/${id}/send`, undefined, appOutbox);
+    expect(r.statusCode).toBe(200);
+    expect(r.json()).toMatchObject({ status: "sent", waiting: true });
+    expect(sent.length).toBe(before); // nothing left the server
+    expect((await get(`/api/v1/study/emails/${id}`)).json()).toMatchObject({ waiting: true });
+    // A test to myself is queued too.
+    const t = await send("POST", `/api/v1/study/emails/${id}/test-send`, { to: ADMIN }, appOutbox);
+    expect(t.json()).toMatchObject({ sent: true, queued: true });
+
+    const d1 = await deliverOutbox(db, testEnv());
+    expect(d1).toMatchObject({ sent: 2, failed: 0 });
+    expect(sent.slice(before).map((m) => m.subject).sort()).toEqual(["ZZ outbox one", "[TEST] ZZ outbox one"].sort());
+    expect(sent.at(-1)!.from.address).toBe("student@uni.invalid");
+    expect((await get(`/api/v1/study/emails/${id}`)).json()).toMatchObject({ status: "sent", waiting: false });
+    expect(await db.mailLog.count({ where: { toEmail: "outbox@testuni.invalid", status: "sent" } })).toBe(1);
+    expect((await deliverOutbox(db, testEnv())).sent).toBe(0); // never twice
+
+    // The SMTP server refuses: the e-mail is marked failed and can be sent again.
+    const id2 = await draft("ZZ outbox two");
+    await send("POST", `/api/v1/study/emails/${id2}/send`, undefined, appOutbox);
+    setMailTestHooks({ send: () => Promise.reject(Object.assign(new Error("Invalid credentials"), { code: "EAUTH" })) });
+    const d2 = await deliverOutbox(db, testEnv());
+    expect(d2.failed).toBe(1);
+    expect((await get(`/api/v1/study/emails/${id2}`)).json()).toMatchObject({ status: "failed", waiting: false });
+    expect((await get(`/api/v1/study/emails/${id2}`)).json<{ error: string }>().error).toMatch(/login failed/);
+    setMailTestHooks({ send: (_c, m) => (sent.push(m), Promise.resolve({ messageId: m.messageId, response: "250 OK", accepted: [m.to], rejected: [] })) });
+
+    // A PC that stopped mid-send: the row is marked failed, not sent again.
+    const id3 = await draft("ZZ outbox three");
+    await send("POST", `/api/v1/study/emails/${id3}/send`, undefined, appOutbox);
+    const row = await db.mailOutbox.findFirstOrThrow({ where: { status: "queued" }, orderBy: { id: "desc" } });
+    await db.mailOutbox.update({ where: { id: row.id }, data: { status: "sending", claimedAt: new Date(Date.now() - 60 * 60_000) } });
+    const d3 = await deliverOutbox(db, testEnv());
+    expect(d3).toMatchObject({ interrupted: 1, sent: 0 });
+    expect((await get(`/api/v1/study/emails/${id3}`)).json<{ status: string; error: string }>()).toMatchObject({ status: "failed" });
+    await db.mailLog.deleteMany({ where: { toEmail: "outbox@testuni.invalid" } });
   });
 
   it("application window: open, probably open, opens soon; the open filter and the overview list", async () => {

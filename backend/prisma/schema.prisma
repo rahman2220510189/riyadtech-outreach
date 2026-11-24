@@ -529,6 +529,7 @@ model Mailbox {
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   mails           MailLog[]
+  outbox          MailOutbox[]
   applications    Application[]
 
   @@map("mailboxes")
@@ -568,15 +569,42 @@ model MailLog {
   toEmail      String   @map("to_email")
   subject      String
   messageId    String?  @map("message_id")
-  /// sent | failed
+  /// queued (waiting in the outbox) | sent | failed
   status       String
   smtpResponse String?  @map("smtp_response")
   error        String?
   createdBy    String?  @map("created_by")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  outbox       MailOutbox?
 
   @@index([kind, createdAt(sort: Desc)])
   @@map("mail_log")
+}
+
+/// An e-mail waiting for `npm run mail:outbox` on my PC (MAIL_DELIVERY=outbox on a host that blocks SMTP).
+model MailOutbox {
+  id          BigInt    @id @default(autoincrement())
+  mailLogId   BigInt    @unique @map("mail_log_id")
+  mailLog     MailLog   @relation(fields: [mailLogId], references: [id], onDelete: Cascade)
+  mailboxId   BigInt    @map("mailbox_id")
+  mailbox     Mailbox   @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  /// from, to, replyTo, subject, text, headers, messageId
+  message     Json
+  /// [{ filename, contentType, base64 }]
+  attachments Json      @default("[]")
+  /// study_email | application: the record whose status follows the delivery
+  refKind     String?   @map("ref_kind")
+  refId       BigInt?   @map("ref_id")
+  /// queued | sending | sent | failed
+  status      String    @default("queued")
+  attempts    Int       @default(0)
+  error       String?
+  claimedAt   DateTime? @map("claimed_at") @db.Timestamptz(3)
+  sentAt      DateTime? @map("sent_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([status, id])
+  @@map("mail_outbox")
 }
 
 /// A CV (or other attachment) for job applications. Stored in the database (PDF, max 5 MB).
