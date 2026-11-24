@@ -169,6 +169,27 @@ describe.skipIf(!url)("job adverts (integration)", () => {
     expect(stats.lastFetch).toMatchObject({ status: "done", summary: { dev: 3 } });
   });
 
+  it("match with my profile: entry level filter, best match first, reasons; my German level counts", async () => {
+    type Item = { title: string; fit: { level: string; seniority: string; warnings: string[]; matched: string[] } };
+    const list = (await get("/api/v1/jobads?sort=fit&level=entry&pageSize=100")).json<{ total: number; items: Item[]; profile: { germanLevel: string } }>();
+    expect(list.profile.germanLevel).toBe("a1");
+    const titles = list.items.map((i) => i.title);
+    const react = list.items.find((i) => i.title.startsWith("React Developer"))!;
+    const node = list.items.find((i) => i.title.startsWith("Node.js Backend Engineer"))!;
+    expect(react.fit.matched).toEqual(expect.arrayContaining(["React", "TypeScript"]));
+    expect(node.fit.warnings.join(" ")).toMatch(/German/);
+    expect(titles.indexOf(react.title)).toBeLessThan(titles.indexOf(node.title));
+    expect(list.items.every((i) => i.fit.seniority === "junior" || i.fit.seniority === "open")).toBe(true);
+    const good = (await get("/api/v1/jobads?fit=possible&pageSize=100")).json<{ items: Item[] }>().items;
+    expect(good.every((i) => i.fit.level !== "unlikely")).toBe(true);
+
+    expect((await send("PATCH", "/api/v1/settings/jobProfile", { germanLevel: "c1" })).statusCode).toBe(200);
+    const after = (await get("/api/v1/jobads?sort=fit&pageSize=100")).json<{ items: Item[] }>().items.find((i) => i.title.startsWith("Node.js Backend Engineer"))!;
+    expect(after.fit.warnings.join(" ")).not.toMatch(/German/);
+    expect((await send("PATCH", "/api/v1/settings/jobProfile", { germanLevel: "zz" })).statusCode).toBe(400);
+    await db.setting.deleteMany({ where: { key: "jobProfile" } });
+  });
+
   it("keep, hide and applied; a second search keeps the text read before", async () => {
     const ad = await db.jobAd.findFirstOrThrow({ where: { externalId: "ZZ-1" } });
     expect((await send("PATCH", `/api/v1/jobads/${ad.id}`, { status: "hidden" })).json()).toMatchObject({ status: "hidden" });

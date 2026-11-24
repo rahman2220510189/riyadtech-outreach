@@ -5,7 +5,9 @@ import type { Prisma } from "../generated/prisma/client.js";
 import { createJobAdsFetch, JOBADS_JOB, jobAdsParamsSchema } from "../jobads/tasks.js";
 import { SOURCE_LABELS, SOURCES } from "../jobads/sources.js";
 import type { JobStore } from "../jobs/store.js";
+import { jobFit } from "../jobads/fit.js";
 import { errors } from "../lib/errors.js";
+import { resolveSettings } from "../settings/loader.js";
 import { applyEmail } from "./leads.js";
 
 export interface JobAdsRoutesOptions {
@@ -29,7 +31,11 @@ const listQuery = z.object({
   /** open = new + saved (default), or one status, or all. */
   status: z.enum(["open", "new", "saved", "hidden", "applied", "all"]).default("open"),
   linked: bool.optional(),
-  sort: z.enum(["newest", "company"]).default("newest"),
+  /** entry: junior roles and roles that name no level (senior, lead and student jobs left out). */
+  level: z.enum(["any", "entry"]).default("any"),
+  /** good: only good matches; possible: good and possible (unlikely ones left out). */
+  fit: z.enum(["good", "possible"]).optional(),
+  sort: z.enum(["newest", "company", "fit"]).default("newest"),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
@@ -63,35 +69,54 @@ function where(q: z.infer<typeof listQuery>): Prisma.JobAdWhereInput {
 export const jobAdsRoutes: FastifyPluginCallback<JobAdsRoutesOptions> = (app, { db, jobs }, done) => {
   app.addHook("preHandler", app.authenticate);
 
+  const include = {
+    place: {
+      select: {
+        id: true,
+        name: true,
+        websiteDomain: true,
+        suppressed: true,
+        emails: { select: { email: true, kind: true, sourceUrl: true, mxValid: true, isPrimary: true } },
+      },
+    },
+  } as const;
+
   app.get("/", async (request) => {
     const q = listQuery.parse(request.query);
     const w = where(q);
-    const orderBy: Prisma.JobAdOrderByWithRelationInput[] =
-      q.sort === "company" ? [{ company: "asc" }, { postedAt: { sort: "desc", nulls: "last" } }] : [{ postedAt: { sort: "desc", nulls: "last" } }, { id: "desc" }];
-    const [total, rows] = await Promise.all([
-      db.jobAd.count({ where: w }),
-      db.jobAd.findMany({
-        where: w,
-        orderBy,
-        skip: (q.page - 1) * q.pageSize,
-        take: q.pageSize,
-        include: {
-          place: {
-            select: {
-              id: true,
-              name: true,
-              websiteDomain: true,
-              suppressed: true,
-              emails: { select: { email: true, kind: true, sourceUrl: true, mxValid: true, isPrimary: true } },
-            },
-          },
-        },
-      }),
-    ]);
+    const me = resolveSettings(await db.setting.findMany()).settings.jobProfile;
+    let total: number;
+    let rows: Prisma.JobAdGetPayload<{ include: typeof include }>[];
+    if (q.level === "entry" || q.fit || q.sort === "fit") {
+      // Level and match are worked out from the advert text, so the filtered set is scored here
+      // (a few thousand adverts at most), then only the page is loaded in full.
+      const light = await db.jobAd.findMany({ where: w, select: { id: true, title: true, company: true, description: true, tags: true, flags: true, postedAt: true }, take: 10_000 });
+      let scored = light.map((a) => ({ a, fit: jobFit(a, me) }));
+      if (q.level === "entry") scored = scored.filter((x) => x.fit.seniority === "junior" || x.fit.seniority === "open");
+      if (q.fit) scored = scored.filter((x) => (q.fit === "good" ? x.fit.level === "good" : x.fit.level !== "unlikely"));
+      const time = (d: Date | null) => d?.getTime() ?? 0;
+      scored.sort((x, y) =>
+        q.sort === "fit"
+          ? y.fit.score - x.fit.score || time(y.a.postedAt) - time(x.a.postedAt)
+          : q.sort === "company"
+            ? x.a.company.localeCompare(y.a.company) || time(y.a.postedAt) - time(x.a.postedAt)
+            : time(y.a.postedAt) - time(x.a.postedAt) || Number(y.a.id - x.a.id),
+      );
+      total = scored.length;
+      const ids = scored.slice((q.page - 1) * q.pageSize, q.page * q.pageSize).map((x) => x.a.id);
+      const page = await db.jobAd.findMany({ where: { id: { in: ids } }, include });
+      const byId = new Map(page.map((r) => [r.id, r]));
+      rows = ids.map((id) => byId.get(id)).filter((r): r is (typeof page)[number] => !!r);
+    } else {
+      const orderBy: Prisma.JobAdOrderByWithRelationInput[] =
+        q.sort === "company" ? [{ company: "asc" }, { postedAt: { sort: "desc", nulls: "last" } }] : [{ postedAt: { sort: "desc", nulls: "last" } }, { id: "desc" }];
+      [total, rows] = await Promise.all([db.jobAd.count({ where: w }), db.jobAd.findMany({ where: w, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize, include })]);
+    }
     return {
       total,
       page: q.page,
       pageSize: q.pageSize,
+      profile: me,
       items: rows.map((a) => ({
         id: Number(a.id),
         source: a.source,
@@ -114,6 +139,7 @@ export const jobAdsRoutes: FastifyPluginCallback<JobAdsRoutesOptions> = (app, { 
         lastSeenAt: a.lastSeenAt,
         status: a.status,
         note: a.note,
+        fit: jobFit(a, me),
         lead: a.place
           ? {
               id: Number(a.place.id),

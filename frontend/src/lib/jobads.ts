@@ -27,9 +27,38 @@ export interface JobAdFilters {
   days?: number;
   status?: "open" | JobAdStatus | "all";
   linked?: boolean;
-  sort?: "newest" | "company";
+  /** entry: junior roles and roles without a level (no senior, lead or student jobs). */
+  level?: "any" | "entry";
+  fit?: "good" | "possible";
+  sort?: "newest" | "company" | "fit";
   page?: number;
 }
+
+export type GermanLevel = "none" | "a1" | "a2" | "b1" | "b2" | "c1" | "c2";
+export interface JobProfile {
+  skills: string[];
+  yearsExperience: number;
+  germanLevel: GermanLevel;
+}
+
+export interface JobFit {
+  level: "good" | "possible" | "unlikely";
+  score: number;
+  seniority: "student" | "junior" | "senior" | "open";
+  years: number | null;
+  german: "fluent" | "good" | "some" | "none";
+  matched: string[];
+  missing: string[];
+  reasons: string[];
+  warnings: string[];
+}
+
+export const FIT_TEXT: Record<JobFit["level"], string> = { good: "Good match", possible: "Possible", unlikely: "Unlikely" };
+export const FIT_STYLE: Record<JobFit["level"], string> = {
+  good: "bg-go text-white",
+  possible: "bg-go-soft text-go",
+  unlikely: "bg-bad-soft text-bad",
+};
 
 export interface JobAd {
   id: number;
@@ -53,6 +82,7 @@ export interface JobAd {
   lastSeenAt: string;
   status: JobAdStatus;
   note: string | null;
+  fit: JobFit;
   lead: { id: number; name: string; domain: string; applyEmail: string | null } | null;
 }
 
@@ -91,7 +121,7 @@ function params(f: JobAdFilters): Record<string, string> {
 export function useJobAds(filters: JobAdFilters) {
   return useQuery({
     queryKey: ["jobads", filters],
-    queryFn: async () => (await api.get<{ items: JobAd[]; total: number; page: number; pageSize: number }>("/jobads", { params: params(filters) })).data,
+    queryFn: async () => (await api.get<{ items: JobAd[]; total: number; page: number; pageSize: number; profile: JobProfile }>("/jobads", { params: params(filters) })).data,
     placeholderData: keepPreviousData,
   });
 }
@@ -139,6 +169,17 @@ export function useUpdateJobAd() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["jobads"] });
       void qc.invalidateQueries({ queryKey: ["jobads-stats"] });
+    },
+  });
+}
+
+export function useSaveJobProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Partial<JobProfile>) => (await api.patch<{ changed: string[] }>("/settings/jobProfile", body)).data,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["jobads"] });
+      void qc.invalidateQueries({ queryKey: ["settings"] });
     },
   });
 }

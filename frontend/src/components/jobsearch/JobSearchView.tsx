@@ -6,7 +6,21 @@ import { useState } from "react";
 import { ApiError } from "@/lib/api";
 import { useCreateApplication } from "@/lib/mail";
 import { formatNumber } from "@/lib/finder";
-import { FLAG_LABELS, type JobAd, type JobAdFilters, type JobSource, SOURCE_LABELS, useJobAdStats, useJobAds, useUpdateJobAd } from "@/lib/jobads";
+import {
+  FIT_STYLE,
+  FIT_TEXT,
+  FLAG_LABELS,
+  type GermanLevel,
+  type JobAd,
+  type JobAdFilters,
+  type JobProfile,
+  type JobSource,
+  SOURCE_LABELS,
+  useJobAdStats,
+  useJobAds,
+  useSaveJobProfile,
+  useUpdateJobAd,
+} from "@/lib/jobads";
 import { SearchPanel } from "./SearchPanel";
 
 const field = "rounded-lg border border-line bg-surface px-2.5 py-2";
@@ -111,6 +125,7 @@ function AdCard({ ad }: { ad: JobAd }) {
           </span>
         ))}
       </div>
+      <FitLine fit={ad.fit} />
       {ad.excerpt && <p className="mt-2 line-clamp-2 max-w-prose text-sm text-ink-2">{ad.excerpt}</p>}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         <a href={ad.url} target="_blank" rel="noopener noreferrer" className="font-medium underline underline-offset-4">
@@ -137,6 +152,76 @@ function AdCard({ ad }: { ad: JobAd }) {
   );
 }
 
+function FitLine({ fit }: { fit: JobAd["fit"] }) {
+  return (
+    <div className="mt-2 space-y-1 text-sm">
+      <p>
+        <span className={`mr-2 rounded-full px-2 py-0.5 text-xs font-semibold ${FIT_STYLE[fit.level]}`}>{FIT_TEXT[fit.level]}</span>
+        <span className="text-ink-2">{fit.reasons.join(" ") || "Nothing in the advert says much either way; open it to judge."}</span>
+      </p>
+      {fit.warnings.length > 0 && <p className="text-warn">⚠ {fit.warnings.join(" ")}</p>}
+      {fit.missing.length > 0 && <p className="text-ink-3">Also asks for: {fit.missing.slice(0, 8).join(", ")}</p>}
+    </div>
+  );
+}
+
+const GERMAN_TEXT: Record<GermanLevel, string> = { none: "None", a1: "A1", a2: "A2", b1: "B1", b2: "B2", c1: "C1", c2: "C2 / native" };
+
+function MyProfile({ profile }: { profile: JobProfile }) {
+  const save = useSaveJobProfile();
+  const [skills, setSkills] = useState(profile.skills.join(", "));
+  const [years, setYears] = useState(String(profile.yearsExperience));
+  const [german, setGerman] = useState<GermanLevel>(profile.germanLevel);
+  const [saved, setSaved] = useState(false);
+  return (
+    <details className="rounded-xl border border-line bg-surface px-4 py-3">
+      <summary className="cursor-pointer text-sm font-medium">
+        Matched against: {profile.skills.length} skills · {profile.yearsExperience} year{profile.yearsExperience === 1 ? "" : "s"} of experience · German{" "}
+        {GERMAN_TEXT[profile.germanLevel]} <span className="font-normal text-ink-2">(change)</span>
+      </summary>
+      <form
+        className="mt-3 grid gap-3 sm:grid-cols-[1fr_9rem_9rem_auto] sm:items-end"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSaved(false);
+          save.mutate(
+            { skills: skills.split(",").map((x) => x.trim()).filter(Boolean), yearsExperience: Number(years) || 0, germanLevel: german },
+            { onSuccess: () => setSaved(true) },
+          );
+        }}
+      >
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-ink-2">My skills (as on my CV, comma separated)</span>
+          <input value={skills} onChange={(e) => setSkills(e.target.value)} className={field} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-ink-2">Years of experience</span>
+          <input type="number" min={0} max={40} step={0.5} value={years} onChange={(e) => setYears(e.target.value)} className={field} />
+        </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="text-ink-2">My German</span>
+          <select value={german} onChange={(e) => setGerman(e.target.value as GermanLevel)} className={field}>
+            {(Object.keys(GERMAN_TEXT) as GermanLevel[]).map((g) => (
+              <option key={g} value={g}>
+                {GERMAN_TEXT[g]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="submit" disabled={save.isPending} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-ink/90 disabled:opacity-50">
+          {save.isPending ? "Saving…" : "Save"}
+        </button>
+        <p className="text-xs text-ink-3 sm:col-span-4">
+          Skill names that are recognised: JavaScript, TypeScript, React, Next.js, Node.js, Express, Python, Java, C#/.NET, PHP, PostgreSQL, MongoDB, SQL, Docker,
+          Kubernetes, AWS, Git, Testing, LLMs / AI, Machine learning, NLP and more.
+          {saved && <span className="ml-2 font-medium text-go">Saved.</span>}
+          {save.error && <span className="ml-2 text-bad">{save.error.message}</span>}
+        </p>
+      </form>
+    </details>
+  );
+}
+
 const STATUS_TABS: [NonNullable<JobAdFilters["status"]>, string][] = [
   ["open", "Open"],
   ["saved", "Saved"],
@@ -146,7 +231,7 @@ const STATUS_TABS: [NonNullable<JobAdFilters["status"]>, string][] = [
 ];
 
 export function JobSearchView() {
-  const [f, setF] = useState<JobAdFilters>({ status: "open", sort: "newest", page: 1 });
+  const [f, setF] = useState<JobAdFilters>({ status: "open", sort: "fit", level: "entry", page: 1 });
   const set = (patch: Partial<JobAdFilters>) => setF({ ...f, ...patch, page: patch.page ?? 1 });
   const stats = useJobAdStats();
   const ads = useJobAds(f);
@@ -209,6 +294,21 @@ export function JobSearchView() {
         </label>
         <div className="col-span-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm sm:col-span-3 lg:col-span-6">
           <label className="flex items-center gap-2">
+            <span className="text-ink-2">Level</span>
+            <select value={f.level ?? "any"} onChange={(e) => set({ level: e.target.value as JobAdFilters["level"] })} className={field}>
+              <option value="entry">Junior &amp; entry level (no senior, lead or student jobs)</option>
+              <option value="any">Any level</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
+            <span className="text-ink-2">Match</span>
+            <select value={f.fit ?? ""} onChange={(e) => set({ fit: (e.target.value || undefined) as JobAdFilters["fit"] })} className={field}>
+              <option value="">Any</option>
+              <option value="possible">Good and possible</option>
+              <option value="good">Good only</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
             <input type="checkbox" className="size-4" checked={f.stack === true} onChange={(e) => set({ stack: e.target.checked ? true : undefined })} />
             Our stack only (React, Node.js, TypeScript…)
           </label>
@@ -223,12 +323,15 @@ export function JobSearchView() {
           <label className="ml-auto flex items-center gap-2">
             <span className="text-ink-2">Sort</span>
             <select value={f.sort} onChange={(e) => set({ sort: e.target.value as JobAdFilters["sort"] })} className={field}>
+              <option value="fit">Best match for me</option>
               <option value="newest">Newest first</option>
               <option value="company">Company A–Z</option>
             </select>
           </label>
         </div>
       </section>
+
+      {d?.profile && <MyProfile profile={d.profile} />}
 
       <div role="tablist" aria-label="Status" className="inline-flex flex-wrap rounded-lg border border-line bg-surface p-1 text-sm">
         {STATUS_TABS.map(([v, label]) => (

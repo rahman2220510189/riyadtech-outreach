@@ -93,6 +93,16 @@ export const settingsSchemas = {
     /** ROR client ID (free, not a secret): 2,000 instead of 50 requests per 5 minutes. */
     rorClientId: z.string().trim().max(100).default(""),
   }),
+  /** Me as a job seeker: compared with each job advert (Job search → "Best match for me"). */
+  jobProfile: z.object({
+    skills: z
+      .array(z.string().trim().min(1).max(40))
+      .max(60)
+      .default(["JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Express", "Fastify", "Python", "HTML/CSS", "Tailwind", "REST APIs", "PostgreSQL", "MongoDB", "SQL", "Prisma", "Git", "Testing", "LLMs / AI", "Machine learning", "NLP"]),
+    /** Years of professional experience (0.5 = six months). */
+    yearsExperience: z.number().min(0).max(40).default(1),
+    germanLevel: z.enum(["none", "a1", "a2", "b1", "b2", "c1", "c2"]).default("a1"),
+  }),
   storage: z.object({
     limitMb: z.number().int().min(100).max(10_000).default(900),
   }),

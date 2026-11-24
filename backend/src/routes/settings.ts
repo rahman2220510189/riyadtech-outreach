@@ -10,7 +10,7 @@ export interface SettingsRoutesOptions {
 }
 
 /** Keys the Settings page may change now; the others arrive with their phase. */
-export const EDITABLE_KEYS: readonly SettingsKey[] = ["company", "sending", "crawler", "scores", "finder", "storage", "study"];
+export const EDITABLE_KEYS: readonly SettingsKey[] = ["company", "sending", "crawler", "scores", "finder", "storage", "study", "jobProfile"];
 
 const keyParam = z.object({ key: z.enum(SETTINGS_KEYS as [SettingsKey, ...SettingsKey[]]) });
 
