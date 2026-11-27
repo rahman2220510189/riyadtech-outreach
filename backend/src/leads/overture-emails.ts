@@ -38,12 +38,14 @@ export interface StoredEmail extends ClassifiedEmail {
  * The address a campaign would use: one seen on the website first; otherwise an Overture-only
  * address, except where the law asks for addresses published on the business's own site (Australia).
  * Department addresses, addresses without a mail server and (in generic-only countries) personal
- * addresses are never chosen (same rules as the crawler).
+ * addresses are never chosen (same rules as the crawler). Overture-only addresses must be on the
+ * website's own domain or a free-mail domain (small businesses often use Gmail).
  */
 export function choosePrimary(rows: StoredEmail[], segment: "A" | "B", rules: AddressRules): StoredEmail | null {
   const site = pickPrimary(rows.filter((r) => r.onSite && r.origin !== "csv"), segment, rules.genericOnly) as StoredEmail | null;
   if (site || rules.publishedOnly) return site;
-  return pickPrimary(rows.filter((r) => !r.onSite && r.origin === "overture"), segment, rules.genericOnly) as StoredEmail | null;
+  // An Overture-only address on a third domain (a parent brand, an agency) is not the business's own contact.
+  return pickPrimary(rows.filter((r) => !r.onSite && r.origin === "overture" && r.domainMatch !== "other"), segment, rules.genericOnly) as StoredEmail | null;
 }
 
 export function storedEmail(row: { email: string; domain: string; kind: string; domainMatch: string; firstName: string | null; context: string | null; sourceUrl: string; mxValid: boolean | null; onSite: boolean; origin: string }): StoredEmail {
@@ -84,7 +86,7 @@ export async function applyOvertureEmails(
   const result: OvertureEmailResult = { places: 0, emails: 0, noMx: 0, ready: 0 };
   if (placeIds.length === 0) return result;
   const places = await db.place.findMany({
-    where: { id: { in: placeIds }, overtureEmails: { isEmpty: false } },
+    where: { id: { in: placeIds } },
     select: { id: true, segment: true, websiteDomain: true, country: true, overtureEmails: true, primaryEmail: true, sourceIds: true, release: true },
     orderBy: { id: "asc" },
   });
@@ -101,11 +103,7 @@ export async function applyOvertureEmails(
   }
 
   for (const { place, emails } of plan) {
-    if (emails.length === 0) {
-      await db.place.update({ where: { id: place.id }, data: { overtureCheckedAt: new Date() } });
-      continue;
-    }
-    result.places++;
+    if (emails.length > 0) result.places++;
     const rules = await addressRules(db, place.country);
     const wasReady = place.primaryEmail !== null;
     await db.$transaction(async (tx) => {
@@ -120,6 +118,9 @@ export async function applyOvertureEmails(
                   'overture', false, ${e.sourceId}, ${opts.release ?? place.release}, now())
           ON CONFLICT (email) DO UPDATE SET
             origin = 'overture',
+            kind = CASE WHEN emails.on_site THEN emails.kind ELSE EXCLUDED.kind END,
+            domain_match = CASE WHEN emails.on_site THEN emails.domain_match ELSE EXCLUDED.domain_match END,
+            first_name = CASE WHEN emails.on_site THEN emails.first_name ELSE EXCLUDED.first_name END,
             mx_valid = CASE WHEN emails.on_site THEN emails.mx_valid ELSE EXCLUDED.mx_valid END,
             source_id = COALESCE(emails.source_id, EXCLUDED.source_id),
             source_release = EXCLUDED.source_release,
@@ -147,14 +148,15 @@ export async function applyOvertureEmails(
 }
 
 /**
- * Leads saved before step 5.1 (or whose check was interrupted): their Overture addresses are
- * checked once, a batch at a time, by the worker. Returns how many places were handled.
+ * Leads whose addresses have not been checked yet (saved before step 5.1, or flagged again after a
+ * rule change): their Overture addresses are saved and checked and the primary address is picked
+ * again, once, a batch at a time, by the worker. Returns how many places had Overture addresses.
  */
 export async function catchUpOvertureEmails(db: Db, opts: { batch?: number; mxResolve?: MxResolver } = {}): Promise<OvertureEmailResult & { left: number }> {
   const rows = await db.$queryRaw<{ id: bigint }[]>`
-    SELECT id FROM places WHERE overture_checked_at IS NULL AND cardinality(overture_emails) > 0 ORDER BY id LIMIT ${opts.batch ?? 300}`;
+    SELECT id FROM places WHERE overture_checked_at IS NULL ORDER BY id LIMIT ${opts.batch ?? 300}`;
   const r = await applyOvertureEmails(db, rows.map((x) => x.id), opts.mxResolve ? { mxResolve: opts.mxResolve } : {});
   const [{ left } = { left: 0n }] = await db.$queryRaw<{ left: bigint }[]>`
-    SELECT count(*) AS left FROM places WHERE overture_checked_at IS NULL AND cardinality(overture_emails) > 0`;
+    SELECT count(*) AS left FROM places WHERE overture_checked_at IS NULL`;
   return { ...r, left: Number(left) };
 }

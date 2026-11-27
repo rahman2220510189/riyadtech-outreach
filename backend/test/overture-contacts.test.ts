@@ -74,6 +74,18 @@ describe("Overture e-mail addresses", () => {
     expect(choosePrimary([row("info@a.com", "generic", { onSite: true, origin: "crawl" })], "B", { genericOnly: false, publishedOnly: true })?.email).toBe("info@a.com");
   });
 
+  it("department addresses like accessibility@ or investors@ are never used", () => {
+    const out = classifyOvertureEmails(["accessibility@wyndham.com", "investors@brand.com", "franchise@brand.com", "ir@brand.com"], "wyndhamhotels.com", () => "ov-2");
+    expect(out.map((e) => e.kind)).toEqual(["role", "role", "role", "role"]);
+  });
+
+  it("an Overture-only address on a third domain (a parent brand) is not used; free mail is", () => {
+    expect(choosePrimary([row("info@wyndham.com", "generic", { domainMatch: "other" })], "B", open)).toBeNull();
+    expect(choosePrimary([row("smiledental@gmail.com", "generic", { domainMatch: "free" })], "B", open)?.email).toBe("smiledental@gmail.com");
+    // On the website, a third-domain address is still allowed (the business publishes it itself).
+    expect(choosePrimary([row("info@wyndham.com", "generic", { domainMatch: "other", onSite: true, origin: "crawl" })], "B", open)?.email).toBe("info@wyndham.com");
+  });
+
   it("an address seen on the website wins over an Overture-only one", () => {
     const rows = [row("hello@a.com", "generic"), row("office@a.com", "generic", { onSite: true, origin: "crawl" })];
     expect(choosePrimary(rows, "B", open)?.email).toBe("office@a.com");
