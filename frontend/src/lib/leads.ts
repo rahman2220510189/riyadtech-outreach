@@ -14,6 +14,8 @@ export interface LeadFilters {
   category?: string;
   crawl?: "new" | "crawled" | "readable" | "problem";
   hasEmail?: boolean;
+  /** "Ready now": usable address, not suppressed, outreach on for the country, score not below the minimum. */
+  ready?: boolean;
   signal?: string;
   bestOffer?: "chatbot" | "agent";
   /** Only companies whose website advertises a developer job. */
@@ -154,6 +156,11 @@ export interface LeadStats {
   withEmail: number;
   waiting: number;
   hiring: number;
+  /** Usable now (Overture or website address), outreach on, not suppressed. */
+  readyNow: number;
+  crawledToday: number;
+  /** Not crawled and no usable address yet. */
+  waitingForCrawl: number;
 }
 
 export interface CrawlParams {

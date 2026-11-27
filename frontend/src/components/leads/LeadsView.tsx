@@ -109,6 +109,7 @@ export function LeadsView() {
     const bo = sp.get("bestOffer");
     if (bo === "chatbot" || bo === "agent") f.bestOffer = bo;
     if (sp.get("hiring") === "true") f.hiring = true;
+    if (sp.get("ready") === "true") f.ready = true;
     const jf = sp.get("jobFlag");
     if (jf === "remote" || jf === "visa" || jf === "english" || jf === "no_local_lang") f.jobFlag = jf;
     for (const k of ["minFit", "minNeed"] as const) {
@@ -139,7 +140,10 @@ export function LeadsView() {
   const withEmail = stats.data?.reduce((n, s) => n + s.withEmail, 0) ?? 0;
   const waiting = stats.data?.reduce((n, s) => n + s.waiting, 0) ?? 0;
   const hiringCount = stats.data?.reduce((n, s) => n + s.hiring, 0) ?? 0;
+  const readyCount = stats.data?.reduce((n, s) => n + s.readyNow, 0) ?? 0;
+  const crawledToday = stats.data?.reduce((n, s) => n + s.crawledToday, 0) ?? 0;
   const hiringView = filters.hiring === true;
+  const readyView = filters.ready === true && !hiringView;
   const signalLabel = (key: string) => signalDefs.data?.find((s) => s.key === key)?.label ?? key.replaceAll("_", " ");
   const pages = leads.data ? Math.max(1, Math.ceil(leads.data.total / PAGE_SIZE)) : 1;
   const usefulSignals = (signalDefs.data ?? []).filter(
@@ -152,28 +156,45 @@ export function LeadsView() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>
           <p className="mt-1 text-ink-2">
-            {formatNumber(total)} saved · {formatNumber(withEmail)} with an e-mail · {formatNumber(waiting)} waiting for a crawl
+            {formatNumber(total)} saved · {formatNumber(withEmail)} with an e-mail · {formatNumber(waiting)} not crawled yet ·{" "}
+            {formatNumber(crawledToday)} crawled today
           </p>
           <div role="tablist" aria-label="View" className="mt-3 inline-flex rounded-lg border border-line bg-surface p-1 text-sm">
             <button
               type="button"
               role="tab"
-              aria-selected={!hiringView}
-              onClick={() => set({ hiring: undefined, jobFlag: undefined })}
-              className={`rounded-md px-3 py-1.5 font-medium ${!hiringView ? "bg-ink text-white" : "text-ink-2 hover:bg-paper"}`}
+              aria-selected={!hiringView && !readyView}
+              onClick={() => set({ hiring: undefined, jobFlag: undefined, ready: undefined })}
+              className={`rounded-md px-3 py-1.5 font-medium ${!hiringView && !readyView ? "bg-ink text-white" : "text-ink-2 hover:bg-paper"}`}
             >
               All leads
             </button>
             <button
               type="button"
               role="tab"
+              aria-selected={readyView}
+              onClick={() => set({ ready: "true", hiring: undefined, jobFlag: undefined, hasEmail: undefined })}
+              className={`rounded-md px-3 py-1.5 font-medium ${readyView ? "bg-ink text-white" : "text-ink-2 hover:bg-paper"}`}
+            >
+              Ready now ({formatNumber(readyCount)})
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={hiringView}
-              onClick={() => set({ hiring: "true", signal: undefined, sort: "newest" })}
+              onClick={() => set({ hiring: "true", ready: undefined, signal: undefined, sort: "newest" })}
               className={`rounded-md px-3 py-1.5 font-medium ${hiringView ? "bg-ink text-white" : "text-ink-2 hover:bg-paper"}`}
             >
               Hiring developers ({formatNumber(hiringCount)})
             </button>
           </div>
+          {readyView && (
+            <p className="mt-2 max-w-prose text-sm text-ink-2">
+              Leads you can use now: a checked address (from the website or from Overture&apos;s open data), mail server found,
+              not on the suppression list, and outreach switched on for the country. Leads that are not crawled yet are
+              crawled later for signals and a better address.
+            </p>
+          )}
           {hiringView && (
             <p className="mt-2 max-w-prose text-sm text-ink-2">
               Companies whose own website advertises a developer job, in every country and both segments. For job

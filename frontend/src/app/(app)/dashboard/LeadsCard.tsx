@@ -20,7 +20,9 @@ export function LeadsCard() {
   const countries = useCountries();
   const leadStats = useLeadStats();
   const withEmail = leadStats.data?.reduce((n, s) => n + s.withEmail, 0) ?? 0;
-  const waiting = leadStats.data?.reduce((n, s) => n + s.waiting, 0) ?? 0;
+  const waiting = leadStats.data?.reduce((n, s) => n + s.waitingForCrawl, 0) ?? 0;
+  const ready = leadStats.data?.reduce((n, s) => n + s.readyNow, 0) ?? 0;
+  const crawledToday = leadStats.data?.reduce((n, s) => n + s.crawledToday, 0) ?? 0;
   const rows = stats.data ?? [];
   const total = rows.reduce((n, r) => n + r.places, 0);
 
@@ -53,13 +55,19 @@ export function LeadsCard() {
       </div>
       {leadStats.data && (
         <p className="mb-3 text-sm text-ink-2">
+          <Link href="/leads?ready=true" className="font-medium text-ink underline underline-offset-2">
+            {formatNumber(ready)} ready to use now
+          </Link>
+          {" · "}
           <Link href="/leads?hasEmail=true" className="underline underline-offset-2">
             {formatNumber(withEmail)} with an e-mail
           </Link>
           {" · "}
-          <Link href="/leads?crawl=new" className="underline underline-offset-2">
-            {formatNumber(waiting)} waiting for a website crawl
+          <Link href="/leads?crawl=new&hasEmail=false" className="underline underline-offset-2">
+            {formatNumber(waiting)} waiting for a crawl
           </Link>
+          {" · "}
+          {formatNumber(crawledToday)} crawled today
         </p>
       )}
       <div className="overflow-x-auto rounded-xl border border-line bg-surface">

@@ -69,6 +69,12 @@ export interface JobSummary {
   kept?: number;
   inserted?: number;
   updated?: number;
+  /** Kept places whose Overture record lists an e-mail address. */
+  withEmail?: number;
+  overtureEmails?: number;
+  overtureNoMx?: number;
+  /** Leads usable right after the import, before any crawl. */
+  readyNow?: number;
   bytes?: number;
   skipped?: Record<string, number>;
   bySegment?: Record<string, number>;
@@ -113,8 +119,18 @@ export interface JobEvent {
   message: string;
 }
 
+export interface StorageEstimate {
+  ok: boolean;
+  databaseMb: number;
+  addedMb: number;
+  projectedMb: number;
+  limitMb: number;
+}
+
 export interface JobDetail extends JobListItem {
   tasks: Partial<Record<"queued" | "running" | "done" | "failed" | "cancelled", number>>;
+  /** Estimates only: how big the database would get with these leads. */
+  storage?: StorageEstimate | null;
   startedAt: string | null;
   events: JobEvent[];
 }

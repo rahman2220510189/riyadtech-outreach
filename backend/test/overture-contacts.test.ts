@@ -79,3 +79,12 @@ describe("Overture e-mail addresses", () => {
     expect(choosePrimary(rows, "B", open)?.email).toBe("office@a.com");
   });
 });
+
+describe("crawled today", () => {
+  it("starts at midnight in Dhaka", async () => {
+    const { startOfToday } = await import("../src/routes/leads.js");
+    // 20:30 UTC on 27 Nov = 02:30 on 28 Nov in Dhaka (UTC+6) -> midnight Dhaka = 18:00 UTC on 27 Nov.
+    expect(startOfToday(new Date("2026-11-27T20:30:00Z")).toISOString()).toBe("2026-11-27T18:00:00.000Z");
+    expect(startOfToday(new Date("2026-11-27T10:15:30.500Z")).toISOString()).toBe("2026-11-26T18:00:00.000Z");
+  });
+});

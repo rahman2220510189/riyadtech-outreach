@@ -13,7 +13,7 @@ import { seedAdmin } from "../../src/auth/seed.js";
 import { prismaAuthStore } from "../../src/auth/store.js";
 import { clearCrawlCaches, createCrawlJob, setCrawlTestHooks } from "../../src/crawler/tasks.js";
 import { createDb, type Db } from "../../src/db/client.js";
-import { applyOvertureEmails } from "../../src/leads/overture-emails.js";
+import { applyOvertureEmails, catchUpOvertureEmails } from "../../src/leads/overture-emails.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "../../src/jobs/handlers.js";
 import { JobRunner } from "../../src/jobs/runner.js";
 import { JobStore } from "../../src/jobs/store.js";
@@ -347,6 +347,35 @@ describe.skipIf(!url)("crawl jobs (integration)", () => {
     // Running the Overture step again changes nothing (no duplicates).
     expect(await applyOvertureEmails(db, ids, { release: "1999-12-31.0", mxResolve })).toMatchObject({ emails: 3, ready: 0 });
     expect(await db.email.count({ where: { place: { country: { in: ["ZW", "ZX"] } } } })).toBe(3);
+  });
+
+  it("leads saved before 5.1 are caught up once; Ready now = usable address + outreach on; stats count it", async () => {
+    // An older lead: Overture listed an address, but it was never checked.
+    await db.place.create({
+      data: { lat: 0, lng: 0, confidence: 0.9, release: "1999-12-31.0", city: "Testville", segment: "A", categoryKey: "web_design", name: "Late Agency", website: `${srv.origin("late.invalid")}/`, websiteDomain: "late.invalid", country: "ZW", overtureEmails: ["hello@late.invalid"] },
+    });
+    const mxResolve = (d: string) => Promise.resolve([{ exchange: `mx.${d}`, priority: 10 }]);
+    for (let i = 0; i < 50; i++) if ((await catchUpOvertureEmails(db, { mxResolve })).left === 0) break;
+    const late = await db.place.findFirstOrThrow({ where: { websiteDomain: "late.invalid" } });
+    expect(late.primaryEmail).toBe("hello@late.invalid");
+    expect(late.overtureCheckedAt).not.toBeNull();
+    expect((await catchUpOvertureEmails(db, { mxResolve })).places).toBe(0); // once only
+
+    const get = (u: string) => app.inject({ method: "GET", url: u, cookies: cookie });
+    const names = async (qs: string) => (await get(`/api/v1/leads?${qs}`)).json<{ items: { name: string }[] }>().items.map((i) => i.name).sort();
+    // Outreach is off for ZW: nothing is ready (job-search-only and switched-off countries never are).
+    expect(await names("country=ZW&ready=true")).toEqual([]);
+    await db.country.update({ where: { code: "ZW" }, data: { enabled: true } });
+    await db.country.update({ where: { code: "ZX" }, data: { enabled: true } });
+    expect(await names("country=ZW&ready=true")).toEqual(["Late Agency", "Walled Agency"]);
+    expect(await names("country=ZX&ready=true")).toEqual([]); // Overture-only address in a published-only country
+    expect(await names("country=ZX&ready=false")).toEqual(["Quiet Studio"]);
+
+    const stats = (await get("/api/v1/leads/stats")).json<{ items: { segment: string; readyNow: number; crawledToday: number; waitingForCrawl: number }[] }>();
+    const a = stats.items.find((x) => x.segment === "A")!;
+    expect(a.readyNow).toBeGreaterThanOrEqual(2);
+    expect(a.crawledToday).toBeGreaterThanOrEqual(2); // the agency and the walled site, crawled in this test run
+    expect(typeof a.waitingForCrawl).toBe("number");
   });
 
   it("settings API: validated changes, audit log, unknown keys", async () => {

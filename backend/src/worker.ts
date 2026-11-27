@@ -10,6 +10,7 @@ import { createDb } from "./db/client.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "./jobs/handlers.js";
 import { JobRunner } from "./jobs/runner.js";
 import { JobStore } from "./jobs/store.js";
+import { catchUpOvertureEmails } from "./leads/overture-emails.js";
 import { studySchedule } from "./study/watch.js";
 import { setHttpLogger, shortUrl } from "./finder/overture/http.js";
 import { buildLoggerOptions } from "./lib/logger.js";
@@ -51,6 +52,16 @@ async function main(): Promise<void> {
         run: async (settings) => {
           const started = await studySchedule(db, jobStore, settings, new Date(), env);
           if (started) log.info({ started }, "Study check started");
+        },
+      },
+      {
+        // Addendum 2: leads imported before Overture addresses were used at import get them once,
+        // 300 places per run (MX lookups are cached), until none are left.
+        name: "overture catch-up",
+        ms: 3 * 60_000,
+        run: async () => {
+          const r = await catchUpOvertureEmails(db);
+          if (r.places > 0) log.info({ checked: r.places, ready: r.ready, left: r.left }, "Overture addresses checked for earlier leads");
         },
       },
     ],

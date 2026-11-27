@@ -4,11 +4,13 @@ import type { Db } from "../db/client.js";
 import { resolveArea } from "../finder/area.js";
 import { createFinderJob } from "../finder/jobs.js";
 import { finderParamsSchema } from "../finder/params.js";
+import { checkStorage } from "../finder/storage.js";
 import { FINDER_JOB } from "../finder/tasks.js";
 import type { JobStore } from "../jobs/store.js";
 import { FatalTaskError } from "../jobs/types.js";
 import { AppError, errors } from "../lib/errors.js";
 import { loadSeedData } from "../seed/files.js";
+import { resolveSettings } from "../settings/loader.js";
 
 export interface FinderRoutesOptions {
   db: Db;
@@ -101,13 +103,21 @@ export const finderRoutes: FastifyPluginCallback<FinderRoutesOptions> = (app, { 
       db.jobEvent.findMany({ where: { jobId: job.id }, orderBy: { id: "desc" }, take: 200 }),
     ]);
     const tasks = Object.fromEntries(byStatus.map((s) => [s.status, s._count._all]));
+    const summary = (job.summary ?? (await jobs.summarize(job.id, job.kind))) as Record<string, unknown> | null;
+    // An estimate also says how big the database would get (Neon free plan: 1 GB).
+    const kept = typeof summary?.kept === "number" ? summary.kept : 0;
+    const storage =
+      job.kind === FINDER_JOB && job.dryRun && job.status === "done" && kept > 0
+        ? await checkStorage(db, kept, resolveSettings(await db.setting.findMany()).settings.storage.limitMb)
+        : null;
     return {
       id: Number(job.id),
       kind: job.kind,
       status: job.status,
       dryRun: job.dryRun,
       params: job.params,
-      summary: job.summary ?? (await jobs.summarize(job.id, job.kind)),
+      summary,
+      storage,
       error: job.error,
       tasks,
       createdAt: job.createdAt,

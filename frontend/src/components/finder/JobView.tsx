@@ -208,6 +208,34 @@ export function JobView({ id }: { id: number }) {
             <Stat label="Downloaded" value={formatBytes(s.bytes)} />
           </dl>
 
+          {(s.kept ?? 0) > 0 && (
+            <dl className="grid divide-y divide-line-soft rounded-xl border border-line bg-surface sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+              <Stat label="With an e-mail in Overture's data" value={formatNumber(s.withEmail ?? 0)} />
+              {j.dryRun ? (
+                <Stat
+                  label="Database after the import"
+                  value={j.storage ? `about ${j.storage.projectedMb} of ${j.storage.limitMb} MB` : "—"}
+                />
+              ) : (
+                <Stat label="Ready to use now (before any crawl)" value={formatNumber(s.readyNow ?? 0)} strong />
+              )}
+              {j.dryRun ? (
+                <Stat label="Own website" value={`all ${formatNumber(s.kept)}`} />
+              ) : (
+                <Stat
+                  label="Overture addresses checked"
+                  value={`${formatNumber(s.overtureEmails ?? 0)}${(s.overtureNoMx ?? 0) > 0 ? ` (${formatNumber(s.overtureNoMx)} no mail server)` : ""}`}
+                />
+              )}
+            </dl>
+          )}
+          {j.dryRun && j.storage && !j.storage.ok && (
+            <p className="rounded-xl border border-bad/40 bg-bad-soft px-5 py-3 text-sm text-bad">
+              These leads would bring the database to about {j.storage.projectedMb} MB, above the limit of {j.storage.limitMb} MB.
+              Choose a smaller area or fewer kinds of business.
+            </p>
+          )}
+
           <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
             <Breakdown
               title="Leads by kind of business"

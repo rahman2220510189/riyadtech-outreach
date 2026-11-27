@@ -193,6 +193,8 @@ model Place {
   overtureEmails String[]  @map("overture_emails")
   /// Social profile links Overture lists (Facebook, Instagram…), at most 5.
   socials        String[]  @default([])
+  /// When Overture's addresses were last saved and checked (null = not yet; the worker catches up).
+  overtureCheckedAt DateTime? @map("overture_checked_at") @db.Timestamptz(3)
   /// Every Overture place id seen for this domain (several = several locations).
   sourceIds      String[]  @map("source_ids")
   locationCount  Int       @default(1) @map("location_count")

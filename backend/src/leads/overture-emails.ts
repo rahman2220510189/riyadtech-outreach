@@ -79,13 +79,13 @@ export interface OvertureEmailResult {
 export async function applyOvertureEmails(
   db: Db,
   placeIds: bigint[],
-  opts: { release: string; sources?: Map<string, Map<string, string>>; mxResolve?: MxResolver; touch?: () => Promise<void> },
+  opts: { release?: string; sources?: Map<string, Map<string, string>>; mxResolve?: MxResolver; touch?: () => Promise<void> },
 ): Promise<OvertureEmailResult> {
   const result: OvertureEmailResult = { places: 0, emails: 0, noMx: 0, ready: 0 };
   if (placeIds.length === 0) return result;
   const places = await db.place.findMany({
     where: { id: { in: placeIds }, overtureEmails: { isEmpty: false } },
-    select: { id: true, segment: true, websiteDomain: true, country: true, overtureEmails: true, primaryEmail: true, sourceIds: true },
+    select: { id: true, segment: true, websiteDomain: true, country: true, overtureEmails: true, primaryEmail: true, sourceIds: true, release: true },
     orderBy: { id: "asc" },
   });
   const plan = places.map((p) => {
@@ -101,7 +101,10 @@ export async function applyOvertureEmails(
   }
 
   for (const { place, emails } of plan) {
-    if (emails.length === 0) continue;
+    if (emails.length === 0) {
+      await db.place.update({ where: { id: place.id }, data: { overtureCheckedAt: new Date() } });
+      continue;
+    }
     result.places++;
     const rules = await addressRules(db, place.country);
     const wasReady = place.primaryEmail !== null;
@@ -114,7 +117,7 @@ export async function applyOvertureEmails(
           INSERT INTO emails (place_id, email, domain, kind, domain_match, is_primary, first_name, context, mx_valid, source_url,
                               origin, on_site, source_id, source_release, updated_at)
           VALUES (${place.id}, ${e.email}, ${e.domain}, ${e.kind}, ${e.domainMatch}, false, ${e.firstName}, '', ${mxValid}, ${e.sourceUrl},
-                  'overture', false, ${e.sourceId}, ${opts.release}, now())
+                  'overture', false, ${e.sourceId}, ${opts.release ?? place.release}, now())
           ON CONFLICT (email) DO UPDATE SET
             origin = 'overture',
             mx_valid = CASE WHEN emails.on_site THEN emails.mx_valid ELSE EXCLUDED.mx_valid END,
@@ -126,6 +129,7 @@ export async function applyOvertureEmails(
         if (rows.length > 0) result.emails++;
       }
 
+      await tx.place.update({ where: { id: place.id }, data: { overtureCheckedAt: new Date() } });
       const current = await tx.email.findMany({ where: { placeId: place.id } });
       const primaryRow = current.find((r) => r.email === place.primaryEmail);
       // Never replace an address the crawler found on the website (or one from my own CSV).
@@ -140,4 +144,17 @@ export async function applyOvertureEmails(
   }
   await refreshSuppressed(db, places.map((p) => p.id));
   return result;
+}
+
+/**
+ * Leads saved before step 5.1 (or whose check was interrupted): their Overture addresses are
+ * checked once, a batch at a time, by the worker. Returns how many places were handled.
+ */
+export async function catchUpOvertureEmails(db: Db, opts: { batch?: number; mxResolve?: MxResolver } = {}): Promise<OvertureEmailResult & { left: number }> {
+  const rows = await db.$queryRaw<{ id: bigint }[]>`
+    SELECT id FROM places WHERE overture_checked_at IS NULL AND cardinality(overture_emails) > 0 ORDER BY id LIMIT ${opts.batch ?? 300}`;
+  const r = await applyOvertureEmails(db, rows.map((x) => x.id), opts.mxResolve ? { mxResolve: opts.mxResolve } : {});
+  const [{ left } = { left: 0n }] = await db.$queryRaw<{ left: bigint }[]>`
+    SELECT count(*) AS left FROM places WHERE overture_checked_at IS NULL AND cardinality(overture_emails) > 0`;
+  return { ...r, left: Number(left) };
 }

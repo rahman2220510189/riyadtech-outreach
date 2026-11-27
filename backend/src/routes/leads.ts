@@ -19,6 +19,14 @@ export interface LeadsRoutesOptions {
 }
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
+
+/** Midnight today in Dhaka (where I work), as a Date. */
+export function startOfToday(now = new Date(), timeZone = "Asia/Dhaka"): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? 0);
+  const sinceMidnightMs = ((get("hour") * 60 + get("minute")) * 60 + get("second")) * 1000 + now.getMilliseconds();
+  return new Date(now.getTime() - sinceMidnightMs);
+}
 const bool = z.enum(["true", "false"]).transform((v) => v === "true");
 
 const listQuery = z.object({
@@ -30,6 +38,8 @@ const listQuery = z.object({
   /** new = not crawled; readable = crawled and read; problem = crawled but not readable */
   crawl: z.enum(["new", "crawled", "readable", "problem", ...CRAWL_STATUSES]).optional(),
   hasEmail: bool.optional(),
+  /** "Ready now": a usable address (checked, mail server ok), not suppressed, outreach on for the country, score not below the minimum. */
+  ready: bool.optional(),
   /** true: only leads on the suppression list (address or domain). */
   suppressed: bool.optional(),
   signal: z.string().regex(/^[a-z_]+$/).optional(),
@@ -46,8 +56,34 @@ const listQuery = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
 
-function listWhere(q: z.infer<typeof listQuery>): Prisma.PlaceWhereInput {
+/** What "Ready now" depends on besides the lead itself. */
+export interface ReadyContext {
+  outreachCountries: string[];
+  minLeadScore: number;
+}
+
+/**
+ * "Ready now": the lead has a primary address (the primary is only ever an address that passed the
+ * checks: not a department address, mail server not missing, generic-only and published-only rules),
+ * is not suppressed, its country has outreach switched on (never job-search-only countries), and it
+ * is not below the minimum lead score (leads not crawled yet have no score and count).
+ * Phase 5.4 adds "not contacted yet".
+ */
+export function readyWhere(ctx: ReadyContext): Prisma.PlaceWhereInput {
+  return {
+    AND: [
+      { primaryEmail: { not: null } },
+      { suppressed: false },
+      { country: { in: ctx.outreachCountries } },
+      ...(ctx.minLeadScore > 0 ? [{ OR: [{ leadScore: null }, { leadScore: { gte: ctx.minLeadScore } }] }] : []),
+    ],
+  };
+}
+
+function listWhere(q: z.infer<typeof listQuery>, ready?: ReadyContext): Prisma.PlaceWhereInput {
   const and: Prisma.PlaceWhereInput[] = [];
+  if (q.ready === true && ready) and.push(readyWhere(ready));
+  if (q.ready === false && ready) and.push({ NOT: readyWhere(ready) });
   if (q.segment) and.push({ segment: q.segment });
   if (q.country) and.push({ country: q.country });
   if (q.regionCode) and.push({ regionCode: q.regionCode });
@@ -129,6 +165,10 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
   app.addHook("preHandler", app.authenticate);
 
   const categoryLabels = () => new Map(loadSeedData().categories.map((c) => [c.key, c.label]));
+  const readyContext = async (): Promise<ReadyContext> => ({
+    outreachCountries: (await db.country.findMany({ where: { enabled: true }, select: { code: true } })).map((c) => c.code),
+    minLeadScore: resolveSettings(await db.setting.findMany()).settings.scores.readyMinLeadScore,
+  });
 
   /** One lead as the list (and the export) shows it. Suppressed leads never show an address. */
   async function itemMapper() {
@@ -185,7 +225,7 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
 
   app.get("/", async (request) => {
     const q = listQuery.parse(request.query);
-    const where = listWhere(q);
+    const where = listWhere(q, q.ready === undefined ? undefined : await readyContext());
     const [total, rows] = await Promise.all([
       db.place.count({ where }),
       db.place.findMany({
@@ -211,7 +251,7 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
    */
   app.get("/export.csv", async (request, reply) => {
     const q = listQuery.parse(request.query);
-    const base = listWhere(q);
+    const base = listWhere(q, q.ready === undefined ? undefined : await readyContext());
     const where: Prisma.PlaceWhereInput = { AND: [base, { suppressed: false }] };
     const toItem = await itemMapper();
     const header = [
@@ -256,12 +296,18 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
 
   /** Counts for the dashboard and the leads page header. */
   app.get("/stats", async () => {
-    const [bySegment, crawled, readable, withEmail, hiring] = await Promise.all([
+    const ready = readyWhere(await readyContext());
+    const today = startOfToday();
+    const [bySegment, crawled, readable, withEmail, hiring, readyNow, crawledToday, waitingForCrawl] = await Promise.all([
       db.place.groupBy({ by: ["segment"], _count: { _all: true } }),
       db.place.groupBy({ by: ["segment"], where: { crawlStatus: { not: null } }, _count: { _all: true } }),
       db.place.groupBy({ by: ["segment"], where: { crawlStatus: { in: ["ok", "partial"] } }, _count: { _all: true } }),
       db.place.groupBy({ by: ["segment"], where: { primaryEmail: { not: null }, suppressed: false }, _count: { _all: true } }),
       db.place.groupBy({ by: ["segment"], where: { signals: { some: { key: { in: HIRING_KEYS } } } }, _count: { _all: true } }),
+      db.place.groupBy({ by: ["segment"], where: ready, _count: { _all: true } }),
+      db.place.groupBy({ by: ["segment"], where: { crawledAt: { gte: today } }, _count: { _all: true } }),
+      // Not crawled and no usable address yet: these wait for the crawler.
+      db.place.groupBy({ by: ["segment"], where: { crawlStatus: null, primaryEmail: null }, _count: { _all: true } }),
     ]);
     const pick = (rows: { segment: string; _count: { _all: number } }[], seg: string) =>
       rows.find((r) => r.segment === seg)?._count._all ?? 0;
@@ -274,6 +320,9 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
         withEmail: pick(withEmail, s),
         waiting: pick(bySegment, s) - pick(crawled, s),
         hiring: pick(hiring, s),
+        readyNow: pick(readyNow, s),
+        crawledToday: pick(crawledToday, s),
+        waitingForCrawl: pick(waitingForCrawl, s),
       })),
     };
   });

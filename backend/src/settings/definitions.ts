@@ -53,6 +53,8 @@ export const settingsSchemas = {
     weights: z.record(z.string().regex(/^[a-z_]+$/), z.number().int().min(0).max(100)).default({}),
     /** Segment B: quote requests + manual paperwork + CRM weights at or above this = "agent" offer. */
     agentThreshold: z.number().int().min(1).max(100).default(20),
+    /** "Ready now" leaves out crawled leads below this lead score (0 = none). Leads not crawled yet have no score and count. */
+    readyMinLeadScore: z.number().int().min(0).max(100).default(0),
   }),
   finder: z.object({
     minConfidence: z.number().min(0).max(1).default(0.6),
