@@ -9,7 +9,7 @@
       "offer": null,
       "step": 1,
       "subject": "{Dev capacity|Development help|A dev partner} for {company}?",
-      "body": "{Hi|Hello} {first_name|there},\n\n{signal_line}\n\nI run Riyad Tech, a small engineering studio. We work behind agencies as their white-label dev team: custom web apps and APIs in Node.js, React/Next.js, MongoDB/PostgreSQL and Python, Docker/AWS deployment, and AI chatbots and AI agents for their clients (including open-source models from Hugging Face). Your name on the work, fixed quotes, EU-hosted, NDA from day one.\n\nWould a short call next week make sense, or should I send two examples first?\n\n{sender_name}\nRiyad Tech · riyadtech.xyz"
+      "body": "{Hi|Hello} {first_name|there},\n\n{signal_line}\n\nI run Riyad Tech, a small dev studio that works behind agencies as their white-label team: web apps and APIs (Node.js, React/Next.js, Python) and AI chatbots and agents for your clients. Your name on the work, fixed quotes, NDA from day one.\n\nIf you have more work than developers right now, would a 15-minute call next week help, or should I send two examples first?\n\n{sender_name}\nRiyad Tech · riyadtech.xyz"
     },
     {
       "seedKey": "a-2",

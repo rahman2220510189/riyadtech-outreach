@@ -31,3 +31,20 @@ describe("campaign clock", () => {
     expect(gapAfter(7n, s)).toBe(gapAfter(7n, s));
   });
 });
+
+describe("company names in e-mails", async () => {
+  const { shortCompany, placeRecipient } = await import("../src/mail/compose.js");
+  it("drop legal forms and the lead's own city at the end", () => {
+    expect(shortCompany("BCN Group Ltd. Manchester", "Manchester")).toBe("BCN Group");
+    expect(shortCompany("Pixel Studio Limited", "Leeds")).toBe("Pixel Studio");
+    expect(shortCompany("Harbour Web (Bristol)", "Bristol")).toBe("Harbour Web");
+    expect(shortCompany("Copper Fox Creative LLC", null)).toBe("Copper Fox Creative");
+    expect(shortCompany("Manchester Digital", "Manchester")).toBe("Manchester Digital"); // the city at the start stays
+    expect(shortCompany("Ltd", null)).toBe("Ltd");
+  });
+  it("also in an opening line saved earlier", () => {
+    const r = placeRecipient({ id: 1n, name: "BCN Group Ltd. Manchester", firstName: null, websiteDomain: "bcn.co.uk", city: "Manchester", country: "GB", signalLine: "I saw BCN Group Ltd. Manchester is hiring a software engineer.", primaryEmail: "info@bcn.co.uk", suppressed: false, signals: [] });
+    expect(r.vars.company).toBe("BCN Group");
+    expect(r.vars.signal_line).toBe("I saw BCN Group is hiring a software engineer.");
+  });
+});

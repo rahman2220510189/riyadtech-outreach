@@ -147,6 +147,26 @@ export async function previewRecipients(
   return places.map((p) => placeRecipient(p));
 }
 
+const LEGAL = /[\s,]+(ltd\.?|limited|llc|l\.l\.c\.|inc\.?|incorporated|plc|llp|lp|pty\.?\s*ltd\.?|pty|gmbh|co\.?|corp\.?|corporation|company)$/i;
+
+/**
+ * The name as a person would write it in an e-mail: "BCN Group Ltd. Manchester" → "BCN Group",
+ * "Pixel Studio Limited" → "Pixel Studio" (legal forms and the lead's own city at the end are dropped).
+ */
+export function shortCompany(name: string, city: string | null): string {
+  let n = name.replace(/\s+/g, " ").trim();
+  for (let i = 0; i < 3; i++) {
+    const before = n;
+    if (city && city.length > 2) {
+      const c = city.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      n = n.replace(new RegExp(`[\\s,–—-]*(\\(?\\s*${c}\\s*\\)?)$`, "i"), "");
+    }
+    n = n.replace(LEGAL, "").replace(/[\s,.–—-]+$/, "");
+    if (n === before) break;
+  }
+  return n.length >= 2 ? n : name.trim();
+}
+
 export function placeRecipient(p: {
   id: bigint;
   name: string;
@@ -167,13 +187,14 @@ export function placeRecipient(p: {
     suppressed: p.suppressed,
     vars: {
       first_name: p.firstName,
-      company: p.name,
+      company: shortCompany(p.name, p.city),
       website: p.websiteDomain,
       city: p.city,
       country: countryName(p.country),
       role,
       stack_match: stackOf(role),
-      signal_line: p.signalLine,
+      // Opening lines saved before names were shortened still carry the full name.
+      signal_line: p.signalLine ? p.signalLine.split(p.name).join(shortCompany(p.name, p.city)) : null,
     },
   };
 }

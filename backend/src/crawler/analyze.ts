@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { type ClassifiedEmail, classifyEmail, extractEmails, pickPrimary, type SeenEmail } from "./emails.js";
 import { computeScores, type DetectedSignal, detectSignals, type Scores, signalLine } from "./signals.js";
+import { shortCompany } from "../mail/compose.js";
 import type { CrawlOutcome } from "./site.js";
 
 export interface LeadInput {
@@ -110,7 +111,7 @@ export function analyze(
       ? signalLine(signals, {
           id: lead.id,
           segment: lead.segment,
-          company: lead.name,
+          company: shortCompany(lead.name, lead.city),
           city: lead.city,
           categoryLabel: lead.categoryLabel,
           bestOffer: scores.bestOffer,
