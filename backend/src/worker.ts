@@ -10,6 +10,7 @@ import { createDb } from "./db/client.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "./jobs/handlers.js";
 import { JobRunner } from "./jobs/runner.js";
 import { JobStore } from "./jobs/store.js";
+import { campaignTick, recoverStaleSends } from "./campaigns/engine.js";
 import { catchUpOvertureEmails } from "./leads/overture-emails.js";
 import { studySchedule } from "./study/watch.js";
 import { setHttpLogger, shortUrl } from "./finder/overture/http.js";
@@ -52,6 +53,17 @@ async function main(): Promise<void> {
         run: async (settings) => {
           const started = await studySchedule(db, jobStore, settings, new Date(), env);
           if (started) log.info({ started }, "Study check started");
+        },
+      },
+      {
+        // Phase 5: campaigns send one e-mail per mailbox per run, inside office hours, with gaps and caps.
+        name: "campaign sender",
+        ms: 60_000,
+        run: async (settings) => {
+          const stale = await recoverStaleSends(db);
+          if (stale > 0) log.warn({ stale }, "Campaign sends interrupted by a restart were marked failed");
+          const r = await campaignTick(db, env, settings);
+          if (r.sent + r.previews + r.failed + r.promoted + r.skipped + r.stopped > 0) log.info(r, "Campaign sender");
         },
       },
       {

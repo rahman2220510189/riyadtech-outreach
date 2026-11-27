@@ -25,6 +25,8 @@ export const crawlParamsSchema = z
     categoryKeys: z.array(z.string().regex(/^[a-z0-9_]+$/)).max(50).optional(),
     /** Only the leads saved (or updated) by this finder import. */
     finderJobId: z.number().int().positive().optional(),
+    /** Exactly these leads (a campaign crawls its leads before the first e-mail). */
+    placeIds: z.array(z.number().int().positive()).max(5000).optional(),
     /** true: only leads never crawled, or crawled longer ago than Settings → recrawl days. */
     onlyNew: z.boolean().default(true),
     /** Only websites that could be read last time (to crawl them again, e.g. after new rules). */
@@ -70,6 +72,7 @@ export function crawlWhere(p: CrawlParams, recrawlDays: number): Prisma.PlaceWhe
   if (p.city) where.city = { equals: p.city, mode: "insensitive" };
   if (p.categoryKeys?.length) where.categoryKey = { in: p.categoryKeys };
   if (p.finderJobId) where.OR = [{ firstJobId: BigInt(p.finderJobId) }, { lastJobId: BigInt(p.finderJobId) }];
+  if (p.placeIds?.length) where.id = { in: p.placeIds.map((n) => BigInt(n)) };
   if (p.onlyReadable) where.crawlStatus = { in: ["ok", "partial"] };
   if (p.onlyHiring) where.signals = { some: { key: { in: ["hiring_dev", "job_opening"] } } };
   if (p.onlyNew) {

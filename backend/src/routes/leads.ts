@@ -9,6 +9,7 @@ import type { Prisma } from "../generated/prisma/client.js";
 import type { JobStore } from "../jobs/store.js";
 import { errors } from "../lib/errors.js";
 import { loadSeedData } from "../seed/files.js";
+import { type ReadyContext, readyWhere } from "../leads/ready.js";
 import { resolveSettings } from "../settings/loader.js";
 import { csvLine } from "../leads/csv.js";
 import { suppressedSet } from "../leads/suppression.js";
@@ -17,6 +18,8 @@ export interface LeadsRoutesOptions {
   db: Db;
   jobs: JobStore;
 }
+
+export { readyWhere };
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 
@@ -55,30 +58,6 @@ const listQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
 });
-
-/** What "Ready now" depends on besides the lead itself. */
-export interface ReadyContext {
-  outreachCountries: string[];
-  minLeadScore: number;
-}
-
-/**
- * "Ready now": the lead has a primary address (the primary is only ever an address that passed the
- * checks: not a department address, mail server not missing, generic-only and published-only rules),
- * is not suppressed, its country has outreach switched on (never job-search-only countries), and it
- * is not below the minimum lead score (leads not crawled yet have no score and count).
- * Phase 5.4 adds "not contacted yet".
- */
-export function readyWhere(ctx: ReadyContext): Prisma.PlaceWhereInput {
-  return {
-    AND: [
-      { primaryEmail: { not: null } },
-      { suppressed: false },
-      { country: { in: ctx.outreachCountries } },
-      ...(ctx.minLeadScore > 0 ? [{ OR: [{ leadScore: null }, { leadScore: { gte: ctx.minLeadScore } }] }] : []),
-    ],
-  };
-}
 
 function listWhere(q: z.infer<typeof listQuery>, ready?: ReadyContext): Prisma.PlaceWhereInput {
   const and: Prisma.PlaceWhereInput[] = [];

@@ -226,6 +226,7 @@ model Place {
   signals        Signal[]
 
   jobAds JobAd[]
+  campaignLeads CampaignLead[]
 
   @@unique([segment, websiteDomain])
   @@index([country, regionCode])
@@ -546,6 +547,7 @@ model Mailbox {
   mails           MailLog[]
   outbox          MailOutbox[]
   applications    Application[]
+  campaigns       Campaign[]
 
   @@map("mailboxes")
 }
@@ -577,7 +579,7 @@ model Template {
 /// Every e-mail sent outside campaigns: tests to myself and job applications.
 model MailLog {
   id           BigInt   @id @default(autoincrement())
-  /// test | application | study
+  /// test | application | study | outreach
   kind         String
   mailboxId    BigInt?  @map("mailbox_id")
   mailbox      Mailbox? @relation(fields: [mailboxId], references: [id], onDelete: SetNull)
@@ -899,4 +901,78 @@ model StudyLetter {
   updatedAt DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("study_letters")
+}
+
+/// Phase 5: one outreach campaign (one segment, one country, one mailbox, step 1 + two follow-ups).
+model Campaign {
+  id           BigInt         @id @default(autoincrement())
+  name         String
+  segment      String         @db.Char(1)
+  country      String         @db.Char(2)
+  categoryKeys String[]       @default([]) @map("category_keys")
+  mailboxId    BigInt         @map("mailbox_id")
+  mailbox      Mailbox        @relation(fields: [mailboxId], references: [id], onDelete: Restrict)
+  /// draft | running | paused | stopped | done
+  status       String         @default("draft")
+  /// At most this many e-mails in total (first real campaign: 5), then it pauses.
+  sendLimit    Int?           @map("send_limit")
+  note         String?
+  crawlJobId   BigInt?        @map("crawl_job_id")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  startedAt    DateTime?      @map("started_at") @db.Timestamptz(3)
+  updatedAt    DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  leads        CampaignLead[]
+
+  @@map("campaigns")
+}
+
+model CampaignLead {
+  id             BigInt         @id @default(autoincrement())
+  campaignId     BigInt         @map("campaign_id")
+  campaign       Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  placeId        BigInt         @map("place_id")
+  place          Place          @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  email          String
+  domain         String
+  offer          String?
+  /// Steps sent so far (0-3).
+  step           Int            @default(0)
+  /// waiting_crawl | queued | done | stopped | replied | skipped | failed | bounced
+  status         String         @default("queued")
+  nextAt         DateTime?      @map("next_at") @db.Timestamptz(3)
+  firstSubject   String?        @map("first_subject")
+  firstMessageId String?        @map("first_message_id")
+  lastMessageId  String?        @map("last_message_id")
+  reason         String?
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  sends          CampaignSend[]
+
+  @@unique([campaignId, placeId], map: "campaign_leads_place_key")
+  @@unique([campaignId, domain], map: "campaign_leads_domain_key")
+  @@index([status, nextAt], map: "campaign_leads_due_idx")
+  @@index([placeId], map: "campaign_leads_place_idx")
+  @@index([domain], map: "campaign_leads_domain_idx")
+  @@map("campaign_leads")
+}
+
+model CampaignSend {
+  id             BigInt       @id @default(autoincrement())
+  campaignLeadId BigInt       @map("campaign_lead_id")
+  lead           CampaignLead @relation(fields: [campaignLeadId], references: [id], onDelete: Cascade)
+  step           Int
+  mailboxId      BigInt       @map("mailbox_id")
+  toEmail        String       @map("to_email")
+  subject        String
+  body           String
+  messageId      String       @map("message_id")
+  /// sending | sent | preview | failed
+  status         String
+  response       String?
+  error          String?
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([campaignLeadId, step], map: "campaign_sends_step_key")
+  @@index([mailboxId, createdAt], map: "campaign_sends_mailbox_idx")
+  @@map("campaign_sends")
 }
