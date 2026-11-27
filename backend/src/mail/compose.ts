@@ -42,6 +42,8 @@ export interface ComposedMail {
   unknown: string[];
   warnings: string[];
   unsubscribeUrl: string | null;
+  /** Outreach only: the same e-mail as plain, personal-looking HTML (no images, no buttons, no tracking). */
+  html: string | null;
 }
 
 let countryNames: Map<string, string> | undefined;
@@ -60,6 +62,23 @@ function stackOf(role: string | null): string | null {
 
 export function senderName(company: Settings["company"], mailbox: { fromName: string }): string {
   return company.senderName.trim() || mailbox.fromName;
+}
+
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/**
+ * The e-mail as simple HTML: the text's paragraphs, and the footer with "unsubscribe" as a link
+ * word instead of the long address. It looks like a normal personal e-mail (no styling, images or
+ * tracking); the plain-text part stays the same as before for mail apps that prefer it.
+ */
+export function htmlVersion(body: string, footer: { lines: string[]; unsubscribeUrl: string }): string {
+  const paras = body
+    .trim()
+    .split(/\n{2,}/)
+    .map((p) => `<p>${esc(p).replace(/\n/g, "<br>\n")}</p>`)
+    .join("\n");
+  const foot = [...footer.lines.map(esc), `Reply &quot;no&quot; and I won&#39;t email again, or <a href="${esc(footer.unsubscribeUrl)}">unsubscribe</a>.`].join("<br>\n");
+  return `<!doctype html><html><body>\n${paras}\n<p style="color:#666;font-size:12px">--<br>\n${foot}</p>\n</body></html>`;
 }
 
 /** The mandatory footer of every outreach e-mail (§8.2). */
@@ -92,6 +111,8 @@ export function composeMail(i: ComposeInput): ComposedMail {
   const subject = renderText(i.subject, vars, `${seed}:subject`);
   const body = renderText(i.body, vars, `${seed}:body`);
   const text = i.kind === "outreach" && unsubscribeUrl ? `${body.text}\n\n${footerText(i.company, sender, unsubscribeUrl)}` : body.text;
+  const footLines = [`${sender} · ${i.company.name}`, ...(i.company.postalAddress.trim() ? [i.company.postalAddress.trim().replace(/\s*\n\s*/g, ", ")] : [])];
+  const html = i.kind === "outreach" && unsubscribeUrl ? htmlVersion(body.text, { lines: footLines, unsubscribeUrl }) : null;
   const headers: Record<string, string> = {};
   if (oneClick) {
     const mailto = `mailto:${i.mailbox.replyTo ?? i.mailbox.fromEmail}?subject=unsubscribe`;
@@ -107,6 +128,7 @@ export function composeMail(i: ComposeInput): ComposedMail {
     unknown: [...new Set([...subject.unknown, ...body.unknown])],
     warnings,
     unsubscribeUrl,
+    html,
   };
 }
 

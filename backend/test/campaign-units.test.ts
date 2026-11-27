@@ -48,3 +48,14 @@ describe("company names in e-mails", async () => {
     expect(r.vars.signal_line).toBe("I saw BCN Group is hiring a software engineer.");
   });
 });
+
+describe("HTML version of an outreach e-mail", async () => {
+  const { htmlVersion } = await import("../src/mail/compose.js");
+  it("keeps the text, escapes it, and links the word unsubscribe", () => {
+    const h = htmlVersion("Hi there,\n\nWe build <apps> & APIs.\nLine two", { lines: ["Riyad · Riyad Tech", "House 12, Dhaka"], unsubscribeUrl: "https://x.test/u/abc?d=1&e=2" });
+    expect(h).toContain("<p>Hi there,</p>");
+    expect(h).toContain("We build &lt;apps&gt; &amp; APIs.<br>\nLine two");
+    expect(h).toContain('or <a href="https://x.test/u/abc?d=1&amp;e=2">unsubscribe</a>.');
+    expect(h).not.toMatch(/<img|<script|<button/);
+  });
+});

@@ -57,6 +57,7 @@ export async function sendLogged(
     to: string;
     subject: string;
     text: string;
+    html?: string;
     headers?: Record<string, string>;
     attachments?: OutgoingMail["attachments"];
     actor: string | null;
@@ -72,6 +73,7 @@ export async function sendLogged(
     replyTo: input.mailbox.replyTo ?? undefined,
     subject: input.subject,
     text: input.text,
+    html: input.html,
     headers: input.headers,
     attachments: input.attachments,
     messageId,

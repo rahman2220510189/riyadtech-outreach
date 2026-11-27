@@ -191,7 +191,7 @@ export const templatesRoutes: FastifyPluginCallback<TemplatesRoutesOptions> = (a
     if (m.missing.length || m.unknown.length) {
       throw new AppError(400, "MISSING_VARIABLES", `Empty or unknown variables for ${recipient.label}: ${[...m.missing, ...m.unknown].join(", ")}`);
     }
-    const result = await sendLogged(db, env, { kind: "test", mailbox, to: b.to, subject: `[TEST] ${m.subject}`, text: m.text, headers: m.headers, actor: request.admin?.email ?? null });
+    const result = await sendLogged(db, env, { kind: "test", mailbox, to: b.to, subject: `[TEST] ${m.subject}`, text: m.text, ...(m.html ? { html: m.html } : {}), headers: m.headers, actor: request.admin?.email ?? null });
     await db.auditLog.create({
       data: { actor: request.admin?.email ?? null, action: "mail.test_send", entity: "mailbox", entityId: String(mailbox.id), details: { to: b.to, ok: result.ok, recipient: recipient.label }, ip: request.ip },
     });

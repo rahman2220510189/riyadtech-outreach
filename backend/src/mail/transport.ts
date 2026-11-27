@@ -28,6 +28,8 @@ export interface OutgoingMail {
   replyTo?: string | undefined;
   subject: string;
   text: string;
+  /** Optional simple HTML version (outreach: the unsubscribe link as a word instead of a long URL). */
+  html?: string | undefined;
   headers?: Record<string, string> | undefined;
   attachments?: { filename: string; content: Buffer; contentType: string }[] | undefined;
   /** Our own Message-ID (kept for threading follow-ups and matching replies later). */
@@ -121,6 +123,7 @@ export async function sendMail(c: SmtpConfig, m: OutgoingMail): Promise<SendResu
       ...(m.replyTo ? { replyTo: m.replyTo } : {}),
       subject: m.subject,
       text: m.text,
+      ...(m.html ? { html: m.html } : {}),
       headers: m.headers ?? {},
       messageId: m.messageId,
       attachments: (m.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })),

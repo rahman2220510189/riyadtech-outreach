@@ -133,6 +133,7 @@ type LeadWithPlace = Prisma.CampaignLeadGetPayload<{ include: { place: { include
 export interface RenderedStep {
   subject: string;
   text: string;
+  html: string | null;
   headers: Record<string, string>;
   missing: string[];
   templateName: string;
@@ -162,7 +163,7 @@ export async function renderStep(
     env,
   });
   const subject = step > 1 && !t.subject.trim() ? `Re: ${lead.firstSubject ?? c.subject}` : c.subject;
-  return { subject, text: c.text, headers: c.headers, missing: [...c.missing, ...c.unknown], templateName: t.name };
+  return { subject, text: c.text, html: c.html, headers: c.headers, missing: [...c.missing, ...c.unknown], templateName: t.name };
 }
 
 /* --------------------------------------------------------------------------------------------- */
@@ -425,6 +426,7 @@ async function sendStep(
       replyTo: campaign.mailbox.replyTo ?? undefined,
       subject: rendered.subject,
       text: rendered.text,
+      ...(rendered.html ? { html: rendered.html } : {}),
       headers,
       messageId,
     });

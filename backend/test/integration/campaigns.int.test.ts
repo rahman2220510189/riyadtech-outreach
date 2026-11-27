@@ -189,6 +189,10 @@ describe.skipIf(!url)("campaigns (integration)", () => {
     const paused = await db.campaign.findUniqueOrThrow({ where: { id: c.id } });
     expect(paused.status).toBe("paused");
     expect(paused.note).toMatch(/Paused after 5/);
+    // The HTML part shows "unsubscribe" as a link word; the plain text keeps the full address.
+    expect(sent[0]!.html).toMatch(/or <a href="https:\/\/outreach\.zz\.invalid\/u\/[^"]+">unsubscribe<\/a>\./);
+    expect(sent[0]!.html).toContain("I saw rb Studio");
+    expect(sent[0]!.text).toMatch(/unsubscribe here: https:\/\/outreach\.zz\.invalid\/u\//);
     expect(sent[0]!.headers?.["List-Unsubscribe"]).toMatch(/^<mailto:.*>, <https:\/\/outreach\.zz\.invalid\/api\/v1\/u\//);
     expect(await db.mailLog.count({ where: { kind: "outreach", toEmail: { endsWith: ".zc.invalid" }, status: "sent" } })).toBe(5);
 

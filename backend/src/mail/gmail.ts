@@ -159,6 +159,7 @@ export async function rawMessage(m: OutgoingMail): Promise<string> {
     ...(m.replyTo ? { replyTo: m.replyTo } : {}),
     subject: m.subject,
     text: m.text,
+    ...(m.html ? { html: m.html } : {}),
     headers: m.headers ?? {},
     messageId: m.messageId,
     attachments: (m.attachments ?? []).map((a) => ({ filename: a.filename, content: a.content, contentType: a.contentType })),
