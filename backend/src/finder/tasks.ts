@@ -1,6 +1,9 @@
+import { normalizeEmail } from "../crawler/emails.js";
+import type { MxResolver } from "../crawler/mx.js";
 import type { Db } from "../db/client.js";
 import { withTxRetry } from "../db/retry.js";
 import { FatalTaskError, type JsonObject, type NewTask, type TaskHandler } from "../jobs/types.js";
+import { applyOvertureEmails } from "../leads/overture-emails.js";
 import { loadSeedData } from "../seed/files.js";
 import { citiesBox, resolveArea } from "./area.js";
 import { type CategoryRule, compileCategories } from "./categories.js";
@@ -15,6 +18,28 @@ import { checkStorage } from "./storage.js";
 import { bump, emptyCounts, topN } from "./summary.js";
 
 export const FINDER_JOB = "finder";
+
+let hooks: { mxResolve?: MxResolver } = {};
+/** Tests only: MX answers without DNS. */
+export function setFinderTestHooks(h: { mxResolve?: MxResolver }): void {
+  hooks = h;
+}
+
+/** "segment|domain" → (address → the Overture place id that listed it). */
+function overtureSources(kept: Candidate[]): Map<string, Map<string, string>> {
+  const out = new Map<string, Map<string, string>>();
+  for (const c of [...kept].sort((a, b) => b.confidence - a.confidence || a.overtureId.localeCompare(b.overtureId))) {
+    if (c.emails.length === 0) continue;
+    const key = `${c.segment}|${c.websiteDomain}`;
+    const m = out.get(key) ?? new Map<string, string>();
+    for (const raw of c.emails) {
+      const e = normalizeEmail(raw);
+      if (e && !m.has(e)) m.set(e, c.overtureId);
+    }
+    out.set(key, m);
+  }
+  return out;
+}
 
 /** Payload of one import task (one run of consecutive row groups in one file). */
 interface ImportPayload {
@@ -213,6 +238,9 @@ async function stageAndMerge(
                    ARRAY(SELECT DISTINCT e FROM stg_overture_places s2, unnest(s2.emails) e
                           WHERE s2.task_id = ${taskId} AND s2.segment = s.segment
                             AND s2.website_domain = s.website_domain ORDER BY e) AS emails,
+                   (ARRAY(SELECT DISTINCT x FROM stg_overture_places s3, unnest(s3.socials) x
+                           WHERE s3.task_id = ${taskId} AND s3.segment = s.segment
+                             AND s3.website_domain = s.website_domain ORDER BY x))[1:5] AS socials,
                    array_agg(DISTINCT s.overture_id ORDER BY s.overture_id) AS source_ids,
                    max(s.confidence) AS confidence
               FROM stg_overture_places s
@@ -220,10 +248,10 @@ async function stageAndMerge(
              GROUP BY s.segment, s.website_domain
           )
           INSERT INTO places (segment, category_key, name, website, website_domain, country, region_code, city, postcode,
-                              address, lat, lng, timezone, phone, overture_emails, source_ids, location_count, confidence,
+                              address, lat, lng, timezone, phone, overture_emails, socials, source_ids, location_count, confidence,
                               release, first_job_id, last_job_id, created_at, updated_at)
           SELECT segment, category_key, name, website, website_domain, country, region_code, city, postcode,
-                 address, lat, lng, timezone, phone, emails, source_ids, cardinality(source_ids), confidence,
+                 address, lat, lng, timezone, phone, emails, socials, source_ids, cardinality(source_ids), confidence,
                  ${release}, ${jobId}, ${jobId}, now(), now()
             FROM batch
            ORDER BY segment, website_domain
@@ -231,6 +259,7 @@ async function stageAndMerge(
             source_ids      = ARRAY(SELECT DISTINCT x FROM unnest(places.source_ids || EXCLUDED.source_ids) x ORDER BY x),
             location_count  = cardinality(ARRAY(SELECT DISTINCT x FROM unnest(places.source_ids || EXCLUDED.source_ids) x)),
             overture_emails = ARRAY(SELECT DISTINCT x FROM unnest(places.overture_emails || EXCLUDED.overture_emails) x ORDER BY x),
+            socials         = (ARRAY(SELECT DISTINCT x FROM unnest(places.socials || EXCLUDED.socials) x ORDER BY x))[1:5],
             name        = CASE WHEN EXCLUDED.confidence > places.confidence THEN EXCLUDED.name ELSE places.name END,
             category_key = CASE WHEN EXCLUDED.confidence > places.confidence THEN EXCLUDED.category_key ELSE places.category_key END,
             address     = COALESCE(places.address, EXCLUDED.address),
@@ -238,7 +267,8 @@ async function stageAndMerge(
             city        = COALESCE(places.city, EXCLUDED.city),
             region_code = COALESCE(places.region_code, EXCLUDED.region_code),
             timezone    = COALESCE(places.timezone, EXCLUDED.timezone),
-            phone       = COALESCE(places.phone, EXCLUDED.phone),
+            -- Numbers saved before phones were cleaned (not E.164) are replaced by the cleaned one.
+            phone       = CASE WHEN places.phone ~ '^[+][0-9]{6,15}$' THEN places.phone ELSE COALESCE(EXCLUDED.phone, places.phone) END,
             confidence  = GREATEST(places.confidence, EXCLUDED.confidence),
             release     = EXCLUDED.release,
             last_job_id = EXCLUDED.last_job_id,
@@ -299,6 +329,7 @@ export const finderImportTask: TaskHandler = async (ctx) => {
     await ctx.touch();
   }
   counts.kept = kept.length;
+  counts.withEmail = kept.filter((c) => c.emails.length > 0).length;
   counts.unmapped = topN(counts.unmapped, 30);
 
   if (!ctx.job.dryRun && kept.length > 0) {
@@ -312,6 +343,23 @@ export const finderImportTask: TaskHandler = async (ctx) => {
     const merged = await stageAndMerge(ctx.db, ctx.task.id, ctx.job.id, p.release, kept);
     counts.inserted = merged.inserted;
     counts.updated = merged.updated;
+
+    // Addendum 2: Overture's own e-mail addresses make many leads usable now, before any crawl.
+    const sources = overtureSources(kept);
+    if (sources.size > 0) {
+      const domains = [...new Set([...sources.keys()].map((k) => k.slice(2)))];
+      const rows = await ctx.db.place.findMany({ where: { websiteDomain: { in: domains } }, select: { id: true, segment: true, websiteDomain: true } });
+      const ids = rows.filter((r) => sources.has(`${r.segment}|${r.websiteDomain}`)).map((r) => r.id);
+      const r = await applyOvertureEmails(ctx.db, ids, {
+        release: p.release,
+        sources,
+        ...(hooks.mxResolve ? { mxResolve: hooks.mxResolve } : {}),
+        touch: () => ctx.touch(),
+      });
+      counts.overtureEmails = r.emails;
+      counts.overtureNoMx = r.noMx;
+      counts.readyNow = r.ready;
+    }
   }
   counts.bytes = counter.bytes;
   ctx.log.debug({ file: shortUrl(p.url), ...counts }, "Import step done");

@@ -26,7 +26,7 @@ export interface Analysis {
   signals: DetectedSignal[];
   scores: Scores;
   signalLine: string | null;
-  /** Overture listed these, but they were not on the website (not used: no proof of publication). */
+  /** Overture listed these, but they were not on the website (kept as Overture-only addresses; used only where the country allows). */
   overtureOnly: string[];
   tech: string[];
 }

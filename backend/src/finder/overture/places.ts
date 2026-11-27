@@ -1,4 +1,5 @@
 import { type CategoryRule, matchCategory, placeNodes, type Taxonomy } from "../categories.js";
+import { cleanSocials, firstValidPhone } from "../contacts.js";
 import { pickOwnWebsite } from "../domain.js";
 import { type BBox, type NearestCity, type OutlineIndex, bboxContains } from "../geo.js";
 
@@ -11,6 +12,7 @@ export const PLACE_COLUMNS = [
   "basic_category",
   "confidence",
   "websites",
+  "socials",
   "emails",
   "phones",
   "addresses",
@@ -33,6 +35,7 @@ export interface PlaceRow {
   basic_category?: string | null;
   confidence?: number | null;
   websites?: (string | null)[] | null;
+  socials?: (string | null)[] | null;
   emails?: (string | null)[] | null;
   phones?: (string | null)[] | null;
   addresses?: (Address | null)[] | null;
@@ -54,8 +57,10 @@ export interface Candidate {
   lat: number;
   lng: number;
   timezone: string | null;
+  /** E.164, or null when Overture has no valid number for the country. */
   phone: string | null;
   emails: string[];
+  socials: string[];
   confidence: number;
 }
 
@@ -179,8 +184,9 @@ export function filterPlace(row: PlaceRow, ctx: FilterContext): FilterResult {
       lat,
       lng,
       timezone: near?.timezone ?? null,
-      phone: clean(row.phones?.find((p) => p?.trim()) ?? null),
+      phone: firstValidPhone(row.phones, ctx.country),
       emails: [...new Set((row.emails ?? []).map((e) => e?.trim().toLowerCase()).filter((e): e is string => !!e))].slice(0, 10),
+      socials: cleanSocials(row.socials),
       confidence: row.confidence ?? 0,
     },
   };

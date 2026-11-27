@@ -1,5 +1,6 @@
 import { z } from "zod";
-import type { Db } from "../db/client.js";
+import { addressRules, clearAddressRulesCache } from "../leads/country-rules.js";
+import { choosePrimary, storedEmail } from "../leads/overture-emails.js";
 import { withTxRetry } from "../db/retry.js";
 import { Prisma } from "../generated/prisma/client.js";
 import type { JobStore, Summarizer } from "../jobs/store.js";
@@ -140,17 +141,8 @@ function stripLabel(params: Record<string, unknown>): Record<string, unknown> {
   return rest;
 }
 
-const countryRulesCache = new Map<string, boolean>();
-async function genericOnly(db: Db, country: string): Promise<boolean> {
-  const hit = countryRulesCache.get(country);
-  if (hit !== undefined) return hit;
-  const c = await db.country.findUnique({ where: { code: country }, select: { outreachRules: true } });
-  const v = Boolean((c?.outreachRules as { genericOnly?: boolean } | null)?.genericOnly);
-  countryRulesCache.set(country, v);
-  return v;
-}
 export function clearCrawlCaches(): void {
-  countryRulesCache.clear();
+  clearAddressRulesCache();
 }
 
 /** Step 2: crawl one website and update every lead that uses it. */
@@ -202,7 +194,7 @@ export const crawlSiteTask: TaskHandler = async (ctx) => {
       categoryValue: cat?.value ?? 3,
       locationCount: place.locationCount,
       overtureEmails: place.overtureEmails,
-      genericOnly: await genericOnly(ctx.db, place.country),
+      genericOnly: (await addressRules(ctx.db, place.country)).genericOnly,
     };
     const a = analyze(lead, outcome, emails, {
       weights: ctx.settings.scores.weights,
@@ -222,20 +214,30 @@ export const crawlSiteTask: TaskHandler = async (ctx) => {
       for (const { place, a } of results) {
         const mine = new Set<string>();
         const keep = a.emails.map((e) => e.email);
-        await tx.email.deleteMany({ where: { placeId: place.id, origin: { not: "csv" }, email: { notIn: keep } } });
+        const listed = place.overtureEmails.map((x) => x.toLowerCase());
+        // Gone from the website: an address Overture also lists stays as an Overture-only address.
+        await tx.email.updateMany({ where: { placeId: place.id, onSite: true, origin: "overture", email: { notIn: keep, in: listed } }, data: { onSite: false, isPrimary: false } });
+        await tx.email.deleteMany({ where: { placeId: place.id, onSite: true, origin: { not: "csv" }, email: { notIn: keep } } });
         for (const e of [...a.emails].sort((x, y) => x.email.localeCompare(y.email))) {
           const rows = await tx.$queryRaw<{ email: string }[]>`
-            INSERT INTO emails (place_id, email, domain, kind, domain_match, is_primary, first_name, context, mx_valid, source_url, origin, updated_at)
+            INSERT INTO emails (place_id, email, domain, kind, domain_match, is_primary, first_name, context, mx_valid, source_url, origin, on_site, updated_at)
             VALUES (${place.id}, ${e.email}, ${e.domain}, ${e.kind}, ${e.domainMatch}, false, ${e.firstName}, ${e.context}, ${e.mxValid}, ${e.sourceUrl},
-                    ${place.overtureEmails.map((x) => x.toLowerCase()).includes(e.email) ? "overture" : "crawl"}, now())
+                    ${listed.includes(e.email) ? "overture" : "crawl"}, true, now())
             ON CONFLICT (email) DO UPDATE SET
               kind = EXCLUDED.kind, domain_match = EXCLUDED.domain_match, first_name = EXCLUDED.first_name,
-              context = EXCLUDED.context, mx_valid = EXCLUDED.mx_valid, source_url = EXCLUDED.source_url, updated_at = now()
+              context = EXCLUDED.context, mx_valid = EXCLUDED.mx_valid, source_url = EXCLUDED.source_url,
+              origin = CASE WHEN emails.origin = 'overture' THEN 'overture' ELSE EXCLUDED.origin END, on_site = true, updated_at = now()
             WHERE emails.place_id = EXCLUDED.place_id
             RETURNING email`;
           if (rows.length > 0) mine.add(e.email);
         }
-        const primary = a.primary && mine.has(a.primary.email) ? a.primary : null;
+        // An address on the website first; otherwise an Overture-only address where the country allows it.
+        const rules = await addressRules(ctx.db, place.country);
+        const fallback = async () =>
+          rules.publishedOnly
+            ? null
+            : choosePrimary((await tx.email.findMany({ where: { placeId: place.id, onSite: false, origin: "overture" } })).map(storedEmail), place.segment as "A" | "B", rules);
+        const primary = a.primary && mine.has(a.primary.email) ? a.primary : await fallback();
         await tx.email.updateMany({ where: { placeId: place.id }, data: { isPrimary: false } });
         if (primary) await tx.email.update({ where: { email: primary.email }, data: { isPrimary: true } });
         await tx.signal.deleteMany({ where: { placeId: place.id } });

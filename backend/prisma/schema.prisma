@@ -164,6 +164,7 @@ model StgOverturePlace {
   timezone      String?
   phone         String?
   emails        String[]
+  socials       String[] @default([])
   confidence    Float    @db.Real
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
@@ -188,8 +189,10 @@ model Place {
   lng            Float
   timezone       String?
   phone          String?
-  /// E-mails Overture already lists for this place (checked by the crawler in Phase 2).
+  /// E-mails Overture already lists for this place (saved as e-mail rows at import, checked like crawled ones).
   overtureEmails String[]  @map("overture_emails")
+  /// Social profile links Overture lists (Facebook, Instagram…), at most 5.
+  socials        String[]  @default([])
   /// Every Overture place id seen for this domain (several = several locations).
   sourceIds      String[]  @map("source_ids")
   locationCount  Int       @default(1) @map("location_count")
@@ -276,8 +279,13 @@ model Email {
   mxValid     Boolean? @map("mx_valid")
   /// The page where the address was published (proof).
   sourceUrl   String   @map("source_url")
-  /// crawl | overture (also listed by Overture) | csv (Phase 3)
+  /// crawl | overture (listed by Overture, on the site or not) | csv (Phase 3)
   origin      String   @default("crawl")
+  /// Seen on the business's website by the crawler. Overture-only addresses are false until a crawl finds them.
+  onSite      Boolean  @default(true) @map("on_site")
+  /// Overture place id and release an Overture address came from.
+  sourceId      String? @map("source_id")
+  sourceRelease String? @map("source_release")
   lawfulBasis String   @default("legitimate_interest_b2b") @map("lawful_basis")
   foundAt     DateTime @default(now()) @map("found_at") @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)

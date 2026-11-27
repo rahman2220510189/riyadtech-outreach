@@ -84,6 +84,9 @@ export interface LeadEmail {
   sourceUrl: string;
   context: string | null;
   origin: string;
+  /** Seen on the business's website (false: listed only by Overture so far). */
+  onSite: boolean;
+  sourceRelease: string | null;
   foundAt: string;
 }
 
@@ -118,6 +121,7 @@ export interface LeadDetail extends Omit<LeadRow, "signals" | "hiringRole" | "jo
   signalLine: string | null;
   firstName: string | null;
   overtureEmails: string[];
+  socials: string[];
   emails: LeadEmail[];
   signals: LeadSignal[];
   crawl: {

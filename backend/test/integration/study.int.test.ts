@@ -353,9 +353,11 @@ describe.skipIf(!url)("study abroad (integration)", () => {
 
   it("application window: open, probably open, opens soon; the open filter and the overview list", async () => {
     const day = (n: number) => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate() + n));
-    const mk = (name: string, deadlines: { kind: string; dueOn: Date }[]) =>
+    const mk = (name: string, deadlines: { kind: string; dueOn: Date; confirmed?: boolean }[]) =>
       db.studyProgram.create({ data: { name, country: "Hungary", applyUrl: "https://apply.example/zz", deadlines: { create: deadlines.map((d) => ({ label: d.kind, ...d })) } } });
-    const open = await mk("ZZ Window Open", [{ kind: "opens", dueOn: day(-5) }, { kind: "deadline", dueOn: day(40) }]);
+    const open = await mk("ZZ Window Open", [{ kind: "opens", dueOn: day(-5), confirmed: true }, { kind: "deadline", dueOn: day(40) }]);
+    // An expected (unconfirmed) opening date that has passed only means "probably open".
+    const expected = await mk("ZZ Window Expected", [{ kind: "opens", dueOn: day(-5) }, { kind: "deadline", dueOn: day(30) }]);
     const likely = await mk("ZZ Window Likely", [{ kind: "deadline", dueOn: day(20) }]);
     const soon = await mk("ZZ Window Soon", [{ kind: "opens", dueOn: day(10) }, { kind: "deadline", dueOn: day(80) }]);
     const closed = await mk("ZZ Window Closed", [{ kind: "opens", dueOn: day(-60) }, { kind: "deadline", dueOn: day(-2) }]);
@@ -363,6 +365,7 @@ describe.skipIf(!url)("study abroad (integration)", () => {
     const w = (id: bigint) => all.find((p) => p.id === Number(id))?.window ?? null;
     expect(w(open.id)).toMatchObject({ state: "open", daysLeft: 40 });
     expect(w(likely.id)).toMatchObject({ state: "likely_open", daysLeft: 20 });
+    expect(w(expected.id)).toMatchObject({ state: "likely_open", daysLeft: 30 });
     expect(w(soon.id)).toMatchObject({ state: "opens_soon", daysLeft: 10 });
     expect(w(closed.id)).toBeNull();
     const openOnly = (await get("/api/v1/study/programs?status=all&open=1")).json<{ items: { id: number }[] }>().items.map((p) => p.id);

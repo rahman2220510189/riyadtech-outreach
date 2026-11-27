@@ -6,6 +6,14 @@ export interface ImportCounts {
   inserted: number;
   updated: number;
   bytes: number;
+  /** Kept places whose Overture record lists at least one e-mail address. */
+  withEmail: number;
+  /** Overture addresses saved (after junk filter). */
+  overtureEmails: number;
+  /** Overture addresses held back: their domain has no mail server. */
+  overtureNoMx: number;
+  /** Leads that became usable at import, before any crawl. */
+  readyNow: number;
   skipped: Record<string, number>;
   bySegment: Record<string, number>;
   byCategory: Record<string, number>;
@@ -13,7 +21,7 @@ export interface ImportCounts {
 }
 
 export function emptyCounts(): ImportCounts {
-  return { rowGroups: 0, scanned: 0, kept: 0, inserted: 0, updated: 0, bytes: 0, skipped: {}, bySegment: {}, byCategory: {}, unmapped: {} };
+  return { rowGroups: 0, scanned: 0, kept: 0, inserted: 0, updated: 0, bytes: 0, withEmail: 0, overtureEmails: 0, overtureNoMx: 0, readyNow: 0, skipped: {}, bySegment: {}, byCategory: {}, unmapped: {} };
 }
 
 export function bump(map: Record<string, number>, key: string, by = 1): void {
@@ -36,7 +44,7 @@ export function topN(map: Record<string, number>, n: number): Record<string, num
 
 export function addCounts(total: ImportCounts, r: Record<string, unknown> | null | undefined): void {
   if (!r) return;
-  for (const k of ["rowGroups", "scanned", "kept", "inserted", "updated", "bytes"] as const) {
+  for (const k of ["rowGroups", "scanned", "kept", "inserted", "updated", "bytes", "withEmail", "overtureEmails", "overtureNoMx", "readyNow"] as const) {
     if (typeof r[k] === "number") total[k] += r[k];
   }
   addMap(total.skipped, r.skipped);

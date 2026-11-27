@@ -13,6 +13,7 @@ import { seedAdmin } from "../../src/auth/seed.js";
 import { prismaAuthStore } from "../../src/auth/store.js";
 import { clearCrawlCaches, createCrawlJob, setCrawlTestHooks } from "../../src/crawler/tasks.js";
 import { createDb, type Db } from "../../src/db/client.js";
+import { applyOvertureEmails } from "../../src/leads/overture-emails.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "../../src/jobs/handlers.js";
 import { JobRunner } from "../../src/jobs/runner.js";
 import { JobStore } from "../../src/jobs/store.js";
@@ -55,10 +56,10 @@ describe.skipIf(!url)("crawl jobs (integration)", () => {
 
   async function cleanup() {
     if (!db) return;
-    await db.place.deleteMany({ where: { country: { in: ["ZZ", "ZY"] } } });
+    await db.place.deleteMany({ where: { country: { in: ["ZZ", "ZY", "ZX", "ZW"] } } });
     await db.domainCrawl.deleteMany({ where: { domain: { endsWith: ".invalid" } } });
     await db.mxCheck.deleteMany({ where: { domain: { endsWith: ".invalid" } } });
-    await db.country.deleteMany({ where: { code: { in: ["ZZ", "ZY"] } } });
+    await db.country.deleteMany({ where: { code: { in: ["ZZ", "ZY", "ZX", "ZW"] } } });
     if (jobIds.length) await db.job.deleteMany({ where: { id: { in: jobIds } } });
     await db.auditLog.deleteMany({ where: { actor: ADMIN } });
     const admins = await db.adminUser.findMany({ where: { email: ADMIN }, select: { id: true } });
@@ -98,6 +99,7 @@ describe.skipIf(!url)("crawl jobs (integration)", () => {
         "/careers": "<html><body>Join our team: we are hiring a Python Developer for our booking system. Fully remote, English-speaking team. Send your CV to jobs@nomx-clinic.invalid</body></html>",
       },
       "walled.invalid": { "/": { status: 403, body: "Forbidden" } },
+      "quiet.invalid": { "/": "<html><body><h1>Quiet Studio</h1><p>We build websites. Call us.</p></body></html>" },
     });
     const site = (host: string) => `${srv.origin(host)}/`;
     setCrawlTestHooks({
@@ -301,6 +303,50 @@ describe.skipIf(!url)("crawl jobs (integration)", () => {
     const jobs = (await get("/api/v1/finder/jobs?kind=crawl")).json<{ items: { id: number; kind: string }[] }>();
     expect(jobs.items.some((j) => j.id === jobId && j.kind === "crawl")).toBe(true);
     await app.inject({ method: "POST", url: `/api/v1/finder/jobs/${jobId}/cancel`, cookies: cookie, headers: CSRF });
+  });
+
+  it("Overture-only addresses: usable before the crawl, kept after it, never used where the site must publish them", async () => {
+    const rules = { law: "test", genericOnly: false, verified: true, notes: "test" };
+    await db.country.createMany({
+      data: [
+        { code: "ZW", name: "Open land", timezones: ["UTC"], bbox: [0, 0, 1, 1], outreachRules: rules },
+        { code: "ZX", name: "Published-only land", timezones: ["UTC"], bbox: [0, 0, 1, 1], outreachRules: { ...rules, conspicuouslyPublishedOnly: true } },
+      ],
+    });
+    clearCrawlCaches();
+    const base = { lat: 0, lng: 0, confidence: 0.9, release: "1999-12-31.0", city: "Testville", segment: "A", categoryKey: "web_design" };
+    const walledUrl = `${srv.origin("walled.invalid")}/`;
+    const quietUrl = `${srv.origin("quiet.invalid")}/`;
+    await db.place.createMany({
+      data: [
+        { ...base, name: "Walled Agency", website: walledUrl, websiteDomain: "walled.invalid", country: "ZW", overtureEmails: ["info@walled.invalid", "privacy@walled.invalid"] },
+        { ...base, name: "Quiet Studio", website: quietUrl, websiteDomain: "quiet.invalid", country: "ZX", overtureEmails: ["info@quiet.invalid"] },
+      ],
+    });
+    const ids = (await db.place.findMany({ where: { country: { in: ["ZW", "ZX"] } }, select: { id: true } })).map((p) => p.id);
+    const mxResolve = (d: string) => Promise.resolve([{ exchange: `mx.${d}`, priority: 10 }]);
+    const r = await applyOvertureEmails(db, ids, { release: "1999-12-31.0", mxResolve });
+    expect(r).toMatchObject({ places: 2, emails: 3, ready: 1 });
+
+    const before = await db.place.findFirstOrThrow({ where: { country: "ZW" } });
+    expect(before.primaryEmail).toBe("info@walled.invalid"); // usable now, no crawl yet
+    expect(before.crawlStatus).toBeNull();
+    expect((await db.place.findFirstOrThrow({ where: { country: "ZX" } })).primaryEmail).toBeNull(); // must be seen on the site first
+
+    await crawl({ country: "ZW" });
+    await crawl({ country: "ZX" });
+    const walled = await db.place.findFirstOrThrow({ where: { country: "ZW" }, include: { emails: true } });
+    expect(walled.crawlStatus).toBe("bot_blocked");
+    expect(walled.primaryEmail).toBe("info@walled.invalid"); // kept after a crawl that found nothing
+    expect(walled.emails.map((e) => `${e.email}:${e.onSite}:${e.isPrimary}`).sort()).toEqual(["info@walled.invalid:false:true", "privacy@walled.invalid:false:false"]);
+    const quiet = await db.place.findFirstOrThrow({ where: { country: "ZX" }, include: { emails: true } });
+    expect(quiet.crawlStatus).toBe("ok");
+    expect(quiet.primaryEmail).toBeNull(); // not on the website: still not used
+    expect(quiet.emails.map((e) => e.email)).toEqual(["info@quiet.invalid"]);
+
+    // Running the Overture step again changes nothing (no duplicates).
+    expect(await applyOvertureEmails(db, ids, { release: "1999-12-31.0", mxResolve })).toMatchObject({ emails: 3, ready: 0 });
+    expect(await db.email.count({ where: { place: { country: { in: ["ZW", "ZX"] } } } })).toBe(3);
   });
 
   it("settings API: validated changes, audit log, unknown keys", async () => {

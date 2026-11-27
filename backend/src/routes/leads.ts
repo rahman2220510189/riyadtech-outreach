@@ -326,6 +326,7 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
       firstName: p.firstName,
       suppressed: p.suppressed,
       overtureEmails: p.overtureEmails,
+      socials: p.socials,
       emails: p.emails.map((e) => ({
         email: e.email,
         kind: e.kind,
@@ -337,6 +338,8 @@ export const leadsRoutes: FastifyPluginCallback<LeadsRoutesOptions> = (app, { db
         sourceUrl: e.sourceUrl,
         context: e.context,
         origin: e.origin,
+        onSite: e.onSite,
+        sourceRelease: e.sourceRelease,
         lawfulBasis: e.lawfulBasis,
         foundAt: e.foundAt,
       })),

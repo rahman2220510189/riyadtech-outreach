@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { clearOpenFiles, setFooterCacheDir } from "../../src/finder/overture/parquet.js";
 import { clearStacCache } from "../../src/finder/overture/stac.js";
-import { clearFinderCaches } from "../../src/finder/tasks.js";
+import { clearFinderCaches, setFinderTestHooks } from "../../src/finder/tasks.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "../../src/jobs/handlers.js";
 import { JobRunner } from "../../src/jobs/runner.js";
 import { defaultSettings, type Settings } from "../../src/settings/definitions.js";
@@ -77,6 +77,8 @@ describe.skipIf(!url)("finder (integration)", () => {
     clearStacCache();
     clearOpenFiles();
     clearFinderCaches();
+    // MX answers without DNS: every fixture domain has a mail server, except one.
+    setFinderTestHooks({ mxResolve: (d) => Promise.resolve(d === "nomail.invalid" ? [] : [{ exchange: `mx.${d}`, priority: 10 }]) });
     await cleanup();
     await syncSeeds(db, { info: () => undefined });
 
@@ -94,6 +96,7 @@ describe.skipIf(!url)("finder (integration)", () => {
 
   afterAll(async () => {
     process.off("SIGINT", onSigint);
+    setFinderTestHooks({});
     await cleanup();
     await server?.close();
     await db?.$disconnect();
@@ -227,11 +230,19 @@ describe.skipIf(!url)("finder (integration)", () => {
     expect(bright).toMatchObject({ locationCount: 2, segment: "B", categoryKey: "dentist", name: "Brightsmile Dental Didsbury" });
     expect(bright.sourceIds.sort()).toEqual(["gb-2a", "gb-2b"]);
     const smile = places.find((p) => p.websiteDomain === "smiledental-mcr.invalid")!;
-    expect(smile).toMatchObject({ overtureEmails: ["hello@smiledental-mcr.invalid"], timezone: "Europe/London", phone: "+44 161 000 0001" });
+    // Phones are saved in E.164; Overture's e-mail makes the lead usable right after the import (before any crawl).
+    expect(smile).toMatchObject({ overtureEmails: ["hello@smiledental-mcr.invalid"], timezone: "Europe/London", phone: "+441610000001", crawlStatus: null });
+    expect(smile.primaryEmail).toBe("hello@smiledental-mcr.invalid");
+    const ov = await db.email.findUniqueOrThrow({ where: { email: "hello@smiledental-mcr.invalid" } });
+    expect(ov).toMatchObject({ placeId: smile.id, origin: "overture", onSite: false, kind: "generic", domainMatch: "own", mxValid: true, isPrimary: true, sourceRelease: RELEASE });
+    expect(ov.sourceId).toBeTruthy();
+    expect(ov.sourceUrl).toBe(`overture://places/${ov.sourceId}`);
+    expect(first.summary).toMatchObject({ withEmail: 1, overtureEmails: 1, overtureNoMx: 0, readyNow: 1 });
     expect(places.find((p) => p.websiteDomain === "pixelandpine.invalid")).toMatchObject({ segment: "A", categoryKey: "web_design" });
 
     const again = await run({ country: "GB", cityGeonameId: MANCHESTER, segments: ["A", "B"] }, false);
-    expect(again.summary).toMatchObject({ kept: 9, inserted: 0, updated: 8 });
+    expect(again.summary).toMatchObject({ kept: 9, inserted: 0, updated: 8, readyNow: 0 });
+    expect(await db.email.count({ where: { email: "hello@smiledental-mcr.invalid" } })).toBe(1);
     expect(await db.place.count({ where: { release: RELEASE, country: "GB" } })).toBe(8);
     expect((await db.place.findFirstOrThrow({ where: { websiteDomain: "brightsmile.invalid" } })).locationCount).toBe(2);
   }, 60_000);

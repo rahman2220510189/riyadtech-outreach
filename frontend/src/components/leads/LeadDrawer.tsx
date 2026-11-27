@@ -54,12 +54,19 @@ function Emails({ lead }: { lead: LeadDetail }) {
             {e.firstName ? `, first name ${e.firstName}` : ""}
             {e.mxValid === null ? ", mail server not checked" : ""}
           </p>
-          <p className="mt-0.5 text-ink-3">
-            Published on{" "}
-            <a href={e.sourceUrl} target="_blank" rel="noopener noreferrer" className="break-all underline underline-offset-2">
-              {host(e.sourceUrl)}
-            </a>
-          </p>
+          {e.onSite ? (
+            <p className="mt-0.5 text-ink-3">
+              Published on{" "}
+              <a href={e.sourceUrl} target="_blank" rel="noopener noreferrer" className="break-all underline underline-offset-2">
+                {host(e.sourceUrl)}
+              </a>
+              {e.origin === "overture" ? " (also listed by Overture)" : ""}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-ink-3">
+              From Overture Maps open data{e.sourceRelease ? ` (release ${e.sourceRelease})` : ""}. Not seen on the website yet.
+            </p>
+          )}
         </li>
       ))}
     </ul>
@@ -307,12 +314,23 @@ export function LeadDrawer({ id, onClose }: { id: number; onClose: () => void })
                 {l.phone ? ` · ${l.phone}` : ""}
                 {l.locationCount > 1 ? ` · ${formatNumber(l.locationCount)} locations` : ""}
               </p>
+              {l.socials.length > 0 && (
+                <p className="flex flex-wrap gap-x-3 text-sm">
+                  {l.socials.map((u) => (
+                    <a key={u} href={u} target="_blank" rel="noopener noreferrer" className="break-all text-ink-2 underline underline-offset-2">
+                      {host(u)}
+                    </a>
+                  ))}
+                </p>
+              )}
             </div>
             <Section title="E-mail addresses">
               <Emails lead={l} />
-              {l.overtureEmails.length > 0 && (
+              {l.emails.some((e) => !e.onSite && e.origin === "overture") && (
                 <p className="mt-3 text-xs text-ink-3">
-                  Overture also lists {l.overtureEmails.join(", ")}. Only addresses published on the website are used.
+                  Addresses from Overture are checked like the ones on websites (junk, department addresses, mail server) and can be
+                  used before the crawl. An address found on the website always wins. In countries that only allow addresses published
+                  on the business&apos;s own site (Australia), they wait for the crawl.
                 </p>
               )}
             </Section>

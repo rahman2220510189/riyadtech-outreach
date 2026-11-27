@@ -82,17 +82,21 @@ export const studyRoutes: FastifyPluginCallback<StudyRoutesOptions> = (app, { db
 
   /**
    * Is the application open now?
-   * - open: an "opens" date has passed and a deadline is still ahead
-   * - likely_open: a deadline is ahead within 90 days and no opening date is known (or one found on the website, not yet confirmed)
+   * - open: a confirmed "opens" date has passed and a deadline is still ahead
+   * - likely_open: as "open", but the opening date is only expected (not confirmed on the official page), or a deadline is ahead within 90 days and no opening date is known (or one found on the website, not yet confirmed)
    * - opens_soon: the opening date is within 60 days
    */
-  function applicationWindow(deadlines: { kind: string; dueOn: Date; done: boolean }[], foundDeadline?: string) {
+  function applicationWindow(deadlines: { kind: string; dueOn: Date; done: boolean; confirmed?: boolean }[], foundDeadline?: string) {
     const live = deadlines.filter((d) => !d.done);
     const nextDeadline = live.filter((d) => d.kind === "deadline" && daysLeft(d.dueOn) >= 0).sort((a, b) => a.dueOn.getTime() - b.dueOn.getTime())[0];
     const opens = live.filter((d) => d.kind === "opens").sort((a, b) => a.dueOn.getTime() - b.dueOn.getTime());
     const opened = opens.filter((d) => daysLeft(d.dueOn) <= 0).at(-1);
     const upcoming = opens.find((d) => daysLeft(d.dueOn) > 0);
-    if (nextDeadline && opened && (!upcoming || upcoming.dueOn > nextDeadline.dueOn)) return { state: "open" as const, deadline: iso(nextDeadline.dueOn), daysLeft: daysLeft(nextDeadline.dueOn) };
+    if (nextDeadline && opened && (!upcoming || upcoming.dueOn > nextDeadline.dueOn)) {
+      // An expected opening date that has passed does not prove the call is open (it may be late this year).
+      const state = opened.confirmed === false ? ("likely_open" as const) : ("open" as const);
+      return { state, deadline: iso(nextDeadline.dueOn), daysLeft: daysLeft(nextDeadline.dueOn) };
+    }
     if (upcoming && daysLeft(upcoming.dueOn) <= 60) return { state: "opens_soon" as const, opensOn: iso(upcoming.dueOn), daysLeft: daysLeft(upcoming.dueOn) };
     if (nextDeadline && !upcoming && daysLeft(nextDeadline.dueOn) <= 90) return { state: "likely_open" as const, deadline: iso(nextDeadline.dueOn), daysLeft: daysLeft(nextDeadline.dueOn) };
     if (!nextDeadline && foundDeadline) {
