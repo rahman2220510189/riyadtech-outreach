@@ -10,8 +10,10 @@ import { createDb } from "./db/client.js";
 import { JOB_SUMMARIZERS, TASK_HANDLERS } from "./jobs/handlers.js";
 import { JobRunner } from "./jobs/runner.js";
 import { JobStore } from "./jobs/store.js";
+import { crawlAhead } from "./campaigns/crawl-ahead.js";
 import { campaignTick, recoverStaleSends } from "./campaigns/engine.js";
 import { catchUpOvertureEmails } from "./leads/overture-emails.js";
+import { checkAllInboxes } from "./mail/inbox.js";
 import { studySchedule } from "./study/watch.js";
 import { setHttpLogger, shortUrl } from "./finder/overture/http.js";
 import { buildLoggerOptions } from "./lib/logger.js";
@@ -53,6 +55,26 @@ async function main(): Promise<void> {
         run: async (settings) => {
           const started = await studySchedule(db, jobStore, settings, new Date(), env);
           if (started) log.info({ started }, "Study check started");
+        },
+      },
+      {
+        // Addendum 2: read the websites of ready leads ahead of the campaigns, one batch at a time.
+        name: "crawl ahead",
+        ms: 10 * 60_000,
+        run: async (settings) => {
+          const id = await crawlAhead(db, jobStore, settings);
+          if (id) log.info({ jobId: Number(id) }, "Background crawl started");
+        },
+      },
+      {
+        // Phase 6: replies, "no"s and bounces stop the follow-ups (IMAP, read-only).
+        name: "reply reader",
+        ms: 5 * 60_000,
+        run: async () => {
+          for (const r of await checkAllInboxes(db, env.ENCRYPTION_KEY)) {
+            if (r.saved > 0) log.info({ saved: r.saved, byKind: r.byKind }, "Replies read");
+            if (r.error) log.warn({ error: r.error }, "Reading replies failed");
+          }
         },
       },
       {

@@ -17,6 +17,7 @@ import { listsRoutes } from "./routes/lists.js";
 import { mailboxesRoutes } from "./routes/mailboxes.js";
 import { templatesRoutes } from "./routes/templates.js";
 import { campaignsRoutes } from "./routes/campaigns.js";
+import { repliesRoutes } from "./routes/replies.js";
 import { unsubscribeRoutes } from "./routes/unsubscribe.js";
 import { suppressionRoutes } from "./routes/suppression.js";
 import { settingsRoutes } from "./routes/settings.js";
@@ -126,6 +127,7 @@ export async function buildApp(env: Env, deps: AppDeps = {}): Promise<FastifyIns
       await app.register(applicationsRoutes, { prefix: `${API_PREFIX}/applications`, db: deps.data.db, env });
       await app.register(studyRoutes, { prefix: `${API_PREFIX}/study`, db: deps.data.db, env });
       await app.register(studyWatchRoutes, { prefix: `${API_PREFIX}/study`, ...deps.data, env });
+      await app.register(repliesRoutes, { prefix: `${API_PREFIX}/replies`, db: deps.data.db, env });
       await app.register(campaignsRoutes, { prefix: `${API_PREFIX}/campaigns`, ...deps.data, env });
       await app.register(unsubscribeRoutes, { prefix: `${API_PREFIX}/u`, db: deps.data.db, env });
     }

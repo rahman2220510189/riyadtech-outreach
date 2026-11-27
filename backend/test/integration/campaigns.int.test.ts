@@ -9,6 +9,7 @@ import { buildApp } from "../../src/app.js";
 import { SESSION_COOKIE } from "../../src/auth/plugin.js";
 import { seedAdmin } from "../../src/auth/seed.js";
 import { prismaAuthStore } from "../../src/auth/store.js";
+import { crawlAhead } from "../../src/campaigns/crawl-ahead.js";
 import { campaignTick, createCampaign, FIRST_CAMPAIGN_LIMIT, launchCampaign } from "../../src/campaigns/engine.js";
 import { createDb, type Db } from "../../src/db/client.js";
 import { JOB_SUMMARIZERS } from "../../src/jobs/handlers.js";
@@ -248,5 +249,19 @@ describe.skipIf(!url)("campaigns (integration)", () => {
     expect(list.items.find((x) => x.name === "ZZ api")?.leads).toMatchObject({ queued: 2, replied: 1 });
     const del = await app.inject({ method: "DELETE", url: `/api/v1/campaigns/${id}`, cookies: cookie, headers: CSRF });
     expect(del.statusCode).toBe(204);
+  });
+
+  it("crawl ahead: one background crawl of ready websites not read yet, never two at once", async () => {
+    await db.job.deleteMany({ where: { kind: "crawl", status: { in: ["queued", "running", "paused"] } } });
+    await makeLeads("ah", 2);
+    await db.place.updateMany({ where: { websiteDomain: { startsWith: "ah" } }, data: { crawlStatus: null, crawledAt: null, signalLine: null } });
+    const id = await crawlAhead(db, jobs, settings);
+    expect(id).not.toBeNull();
+    const job = await db.job.findUniqueOrThrow({ where: { id: id! } });
+    const ids = (job.params as { placeIds: number[] }).placeIds;
+    const ah = await db.place.findMany({ where: { websiteDomain: { startsWith: "ah" } }, select: { id: true } });
+    expect(ids).toEqual(expect.arrayContaining(ah.map((p) => Number(p.id))));
+    expect(await crawlAhead(db, jobs, settings)).toBeNull(); // a crawl is already waiting
+    await db.job.delete({ where: { id: id! } });
   });
 });

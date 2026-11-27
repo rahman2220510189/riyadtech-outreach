@@ -54,6 +54,7 @@
     "hyparquet-compressors": "1.1.2",
     "imapflow": "2.2.1",
     "libphonenumber-js": "1.13.16",
+    "mailparser": "3.14.3",
     "nodemailer": "10.1.7",
     "pg": "8.23.1",
     "pino": "10.4.0",
@@ -62,6 +63,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/mailparser": "3.9.0",
     "@types/node": "22.20.5",
     "@types/nodemailer": "8.0.2",
     "@types/pg": "8.23.1",

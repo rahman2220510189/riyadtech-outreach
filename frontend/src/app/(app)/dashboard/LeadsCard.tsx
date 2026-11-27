@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { SEGMENT_LABELS, type Segment, formatNumber, useCountries } from "@/lib/finder";
 import { useLeadStats } from "@/lib/leads";
+import { useReplies } from "@/lib/replies";
 
 interface Stat {
   country: string;
@@ -19,6 +20,7 @@ export function LeadsCard() {
   });
   const countries = useCountries();
   const leadStats = useLeadStats();
+  const replies = useReplies("open");
   const withEmail = leadStats.data?.reduce((n, s) => n + s.withEmail, 0) ?? 0;
   const waiting = leadStats.data?.reduce((n, s) => n + s.waitingForCrawl, 0) ?? 0;
   const ready = leadStats.data?.reduce((n, s) => n + s.readyNow, 0) ?? 0;
@@ -53,6 +55,11 @@ export function LeadsCard() {
           Find more
         </Link>
       </div>
+      {(replies.data?.open ?? 0) > 0 && (
+        <Link href="/replies" className="mb-3 block rounded-xl border border-go/40 bg-go-soft px-5 py-3 font-medium text-go">
+          {formatNumber(replies.data!.open)} {replies.data!.open === 1 ? "reply" : "replies"} to answer →
+        </Link>
+      )}
       {leadStats.data && (
         <p className="mb-3 text-sm text-ink-2">
           <Link href="/leads?ready=true" className="font-medium text-ink underline underline-offset-2">

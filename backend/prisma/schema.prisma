@@ -542,12 +542,18 @@ model Mailbox {
   gmailConnectedAt     DateTime? @map("gmail_connected_at") @db.Timestamptz(3)
   /// Why the last Gmail send or check failed (cleared when it works again).
   gmailError           String?  @map("gmail_error")
+  /// Phase 6: where reading the inbox got to (IMAP UID), and the last problem.
+  imapUidValidity String?   @map("imap_uid_validity")
+  imapLastUid     Int?      @map("imap_last_uid")
+  imapCheckedAt   DateTime? @map("imap_checked_at") @db.Timestamptz(3)
+  imapError       String?   @map("imap_error")
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   mails           MailLog[]
   outbox          MailOutbox[]
   applications    Application[]
   campaigns       Campaign[]
+  replies         Reply[]
 
   @@map("mailboxes")
 }
@@ -947,6 +953,7 @@ model CampaignLead {
   createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   sends          CampaignSend[]
+  replies        Reply[]
 
   @@unique([campaignId, placeId], map: "campaign_leads_place_key")
   @@unique([campaignId, domain], map: "campaign_leads_domain_key")
@@ -974,5 +981,28 @@ model CampaignSend {
 
   @@unique([campaignLeadId, step], map: "campaign_sends_step_key")
   @@index([mailboxId, createdAt], map: "campaign_sends_mailbox_idx")
+  @@index([messageId], map: "campaign_sends_message_idx")
   @@map("campaign_sends")
+}
+
+/// Phase 6: a reply, auto-reply, "no" or bounce that belongs to a campaign e-mail.
+model Reply {
+  id             BigInt        @id @default(autoincrement())
+  mailboxId      BigInt        @map("mailbox_id")
+  mailbox        Mailbox       @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  campaignLeadId BigInt?       @map("campaign_lead_id")
+  lead           CampaignLead? @relation(fields: [campaignLeadId], references: [id], onDelete: SetNull)
+  imapKey        String        @map("imap_key")
+  fromEmail      String        @map("from_email")
+  subject        String
+  snippet        String
+  /// reply | auto_reply | unsubscribe | bounce
+  kind           String
+  receivedAt     DateTime      @map("received_at") @db.Timestamptz(3)
+  done           Boolean       @default(false)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([mailboxId, imapKey], map: "replies_imap_key")
+  @@index([receivedAt(sort: Desc)], map: "replies_received_idx")
+  @@map("replies")
 }
